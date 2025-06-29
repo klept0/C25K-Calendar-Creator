@@ -33,6 +33,10 @@ from c25k_utils import (
     start_date,
     weather,
 )
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
 # --- Advanced Macros Implementation for progress tracker CSV ---
@@ -628,12 +632,15 @@ def get_output_dir(user):
 
 def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     """
-    Create a progress tracker CSV in the output directory with the correct name and columns.
+    Create a progress tracker Excel file in the output directory with the correct name and columns.
     Returns the filename.
     """
-    filename = os.path.join(outdir, f"{user['name']}_progress_tracker.csv")
+    filename = os.path.join(outdir, f"{user['name']}_progress_tracker.xlsx")
     if not os.path.exists(filename):
-        fieldnames = [
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Progress"
+        columns = [
             "week",
             "day",
             "date_completed",
@@ -646,29 +653,38 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Milestone",
             "Weather",
         ]
-        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            # Pre-fill for a standard 10-week, 3-day-per-week plan
-            weeks = user.get("weeks", 10)
-            days_per_week = user.get("days_per_week", 3)
-            for week in range(1, weeks + 1):
-                for day in range(1, days_per_week + 1):
-                    writer.writerow(
-                        {
-                            "week": week,
-                            "day": day,
-                            "date_completed": "",
-                            "completed": "",
-                            "notes": "",
-                            "Current_Streak": "",
-                            "Missed": "",
-                            "Adjust_Plan": "",
-                            "Effort": "",
-                            "Milestone": "",
-                            "Weather": "",
-                        }
-                    )
+        ws.append(columns)
+        weeks = user.get("weeks", 10)
+        days_per_week = user.get("days_per_week", 3)
+        for week in range(1, weeks + 1):
+            for day in range(1, days_per_week + 1):
+                ws.append([week, day, "", "", "", "", "", "", "", "", ""])
+        # Add example formulas/macros as cell comments or in a separate sheet
+        ws2 = wb.create_sheet("Macros & Instructions")
+        ws2["A1"] = "Example Macros (copy to Progress sheet):"
+        ws2["A2"] = (
+            'Current_Streak: =IF(D2="Y",1,0) in F2, then =IF(D3="Y",F2+1,0) down'
+        )
+        ws2["A3"] = (
+            'Missed: =IF(AND(C2="",TODAY()-DATE(2025,7,15)+(ROW()-2)*2>2),'
+            '"Missed","") in G2'
+        )
+        ws2["A4"] = (
+            'Adjust_Plan: =IF(COUNTIF($D$2:$D$31,"N")>=3,"Consider repeating this week or shifting plan","On Track") in H2'
+        )
+        ws2["A5"] = "Effort: User rates each session (1-5 or Easy/Medium/Hard)"
+        ws2["A6"] = (
+            'Milestone: =IF(AND(A2=1,B2=3),"First week done!",IF(AND(A2=5,B2=3),"Halfway!",IF(AND(A2=10,B2=3),"C25K Complete!",""))) in J2'
+        )
+        ws2["A7"] = "Weather: User logs weather/conditions for each session"
+        ws2["A8"] = 'Goal Progress Visualization: =COUNTIF(D2:D31,"Y")/COUNTA(D2:D31)'
+        ws2["A9"] = (
+            'Weekly Summary: Insert a row after each week and use =COUNTIF(D2:D4,"Y") for completed, =COUNTIF(G2:G4,"Missed") for missed'
+        )
+        ws2["A10"] = (
+            "Auto-Backup/Versioning: Use File > Version history (Google Sheets) or a VBA macro (Excel)"
+        )
+        wb.save(filename)
     return filename
 
 

@@ -49,7 +49,7 @@ All medical and health-related logic in this script is for informational purpose
 <details>
 <summary>Progress Tracking Macros</summary>
 
-The `progress.csv` file includes built-in spreadsheet macros to help you track your Couch to 5K journey:
+The progress tracker Excel file (`name_progress_tracker.xlsx`) includes built-in spreadsheet macros and instructions to help you track your Couch to 5K journey:
 
 - **Auto-fill Today’s Date:** Use `=TODAY()` in the `date_completed` column.
 - **Total Completed Sessions:** `=COUNTIF(D2:D31,"Y")`
@@ -58,14 +58,14 @@ The `progress.csv` file includes built-in spreadsheet macros to help you track y
 - **Days Since Last Session:** `=TODAY()-MAX(C2:C31)`
 - **Motivational Message:** `=IF(COUNTIF(D2:D31,"Y")=COUNTA(D2:D31),"Congratulations! You finished!","Keep going, you're doing great!")`
 
-These macros work in Excel, Google Sheets, and most spreadsheet programs. See the comments in `progress.csv` for more details.
+These macros work in Excel and Google Sheets. See the "Macros & Instructions" sheet in your progress tracker Excel file for more details.
 
 </details>
 
 <details>
 <summary>Advanced Macros in Progress Tracker (Automated Columns)</summary>
 
-The following advanced macros are now included as columns in `progress.csv`:
+The following advanced macros are now included as columns in your progress tracker Excel file (`name_progress_tracker.xlsx`):
 
 - **Current_Streak**: Tracks the current streak of completed sessions. Use `=IF(D2="Y",1,0)` in F2, then `=IF(D3="Y",F2+1,0)` down the column. Longest streak: `=MAX(F2:F31)`.
 - **Missed**: Flags missed sessions. Use `=IF(AND(C2="",TODAY()-DATE(2025,7,15)+(ROW()-2)*2>2),"Missed","")` in G2.
@@ -80,7 +80,7 @@ Other macros:
 - **Weekly Summary**: Insert a row after each week and use `=COUNTIF(D2:D4,"Y")` for completed, `=COUNTIF(G2:G4,"Missed")` for missed, and a motivational message formula.
 - **Auto-Backup/Versioning**: Use File > Version history (Google Sheets) or a VBA macro (Excel).
 
-All formulas/macros are beginner-friendly and can be copy-pasted or are pre-filled in the CSV. See the tool and repo README for more details.
+All formulas/macros are beginner-friendly and can be copy-pasted or are pre-filled in the Excel file. See the "Macros & Instructions" sheet in your progress tracker for more details.
 
 </details>
 
