@@ -2,14 +2,20 @@
 
 **DISCLAIMER: This script is for informational purposes only and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider before starting any new exercise program, especially if you have hypertension or other pre-existing health conditions. Use this script at your own risk. The author assumes no responsibility for any injury or health issues that may result from using this script.**
 
-This script generates a calendar file (.ics) for the popular "Couch to 5K" running program, tailored for users with hypertension. The generated calendar will have three workout reminders per week (Monday, Wednesday, Friday) for 10 weeks, each session scheduled at 7:00 AM for 30 minutes. The plan is further customized based on your age, weight, and gender.
+This script generates a personalized Couch to 5K calendar (.ics) file, tailored for users with hypertension. It customizes the workout plan based on your age, weight, gender, preferred language, and session start time. The script supports multiple export formats for use with Apple/Google calendars, Google Fit, and other platforms.
 
 ## Features
 
-- **Customizable Start Date:** Easily set your preferred program start date.
+- **Customizable Start Date and Time:** Set your preferred program start date and session start time.
 - **Personalized Plan:** Adjusts session duration for older or heavier users.
 - **Health Reminder:** Includes a note to monitor health and consult a doctor if needed.
-- **Ready-to-Import:** Produces a standard `.ics` file compatible with Google Calendar, Apple Calendar, Outlook, and others.
+- **Localization:** Supports English and Spanish for all workout instructions.
+- **Multiple Export Formats:**
+  - `.ics` (standard calendar import, Apple/Google Calendar, Apple Health)
+  - `.csv` (spreadsheet import)
+  - `.json` (data import for other apps)
+  - Google Fit compatible `.csv`
+- **Hydration and Safety Reminders:** Each workout includes hydration and safety notes.
 
 ## Usage
 
@@ -20,15 +26,22 @@ This script generates a calendar file (.ics) for the popular "Couch to 5K" runni
      python3 c25k_ics_generator.py
      ```
 2. **Enter Your Information:**
-   - The script will prompt you for your age, weight (in kg), and gender (male/female).
+   - The script will prompt you for:
+     - Units (Metric or Imperial)
+     - Age
+     - Weight
+     - Gender
+     - Session start time (24h format, e.g., 07:00)
+     - Language (English or Spanish)
+     - Export format (ICS, CSV, JSON, or Google Fit CSV)
    - If any information is missing or invalid, the script will not generate the calendar.
-3. **Import the Calendar:**
-   - Locate the generated `Couch_to_5K_Reminders.ics` file.
-   - Import it into your preferred calendar application.
+3. **Import the Calendar or Data:**
+   - Locate the generated file (e.g., `Couch_to_5K_Reminders.ics`, `.csv`, `.json`, or `Couch_to_5K_GoogleFit.csv`).
+   - Import it into your preferred calendar or health application.
 
 ## Example
 
-To start the program on July 15, 2025, set in the script:
+To start the program on July 15, 2025, at 7:00 AM, set in the script or at the prompt:
 
 ```python
 start_day = datetime(2025, 7, 15)
@@ -36,8 +49,9 @@ start_day = datetime(2025, 7, 15)
 
 ## Customization
 
-- **Session Time:** Change the `hour` and `minute` in the script to adjust workout times.
-- **Days per Week:** Modify the `day_offset` list to change which days sessions occur.
+- **Session Time:** Enter your preferred session time at the prompt.
+- **Language:** Choose English or Spanish for all workout instructions.
+- **Export Format:** Choose the format that best fits your needs (ICS, CSV, JSON, Google Fit CSV).
 - **Workout Duration:** The script automatically reduces session duration for users aged 60+ or weighing 100kg+.
 
 ## Disclaimer
