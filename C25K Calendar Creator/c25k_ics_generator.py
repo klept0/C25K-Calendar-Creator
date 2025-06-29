@@ -337,6 +337,18 @@ def get_user_info() -> Optional[Dict[str, Any]]:
                         )
                     )
                     alert_minutes = 30
+        # Custom rest day scheduling
+        rest_days_input = input(
+            colorize(
+                "Enter your preferred rest days (comma-separated, e.g. Sat,Sun) or leave blank for default (Sat,Sun): ",
+                "yellow",
+                bold=True,
+            )
+        ).strip()
+        if rest_days_input:
+            rest_days = [d.strip().capitalize()[:3] for d in rest_days_input.split(",") if d.strip()]
+        else:
+            rest_days = ["Sat", "Sun"]
         return {
             "name": name,
             "age": age,
@@ -356,6 +368,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             "email": email,
             "location": location,
             "alert_minutes": alert_minutes,
+            "rest_days": rest_days,
         }
     except (ValueError, TypeError):
         print("Invalid input. Please enter valid numbers for age and weight.")
@@ -441,9 +454,11 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     Return a plan (list of dicts) based on age, weight, and plan customization.
     Adjusts session duration for older or heavier users (age >= 60 or weight >= 100kg) for safety.
     Adds actual workout details and tips for each session.
+    Supports custom rest day scheduling and adaptive plan logic.
     """
     weeks = user.get("weeks", 10)
     days_per_week = user.get("days_per_week", 3)
+    rest_days = user.get("rest_days", ["Sat", "Sun"])
     plan: List[Dict[str, Any]] = []
     for week in range(weeks):
         for day in range(days_per_week):
@@ -475,24 +490,24 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
         for session in plan:
             session["duration"] = 25
             session["description"] += " (Reduced session duration for safety.)"
-    # Add rest days (remaining days of week)
+    # Add rest days (user-selected)
     for week in range(weeks):
-        for rest_offset in range(days_per_week, 7):
-            rest_name = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][rest_offset]
-            plan.append(
-                {
-                    "week": week + 1,
-                    "day": rest_name,
-                    "day_offset": rest_offset,
-                    "duration": 0,
-                    "description": (
-                        f"Rest Day - Week {week+1} {rest_name}. "
-                        "Rest and recover. Hydrate and stretch."
-                    ),
-                    "workout": "Rest Day",
-                    "tip": get_beginner_tip(rest_offset, user.get("lang", "e")),
-                }
-            )
+        for rest_offset, rest_name in enumerate(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]):
+            if rest_name in rest_days and rest_offset >= days_per_week:
+                plan.append(
+                    {
+                        "week": week + 1,
+                        "day": rest_name,
+                        "day_offset": rest_offset,
+                        "duration": 0,
+                        "description": (
+                            f"Rest Day - Week {week+1} {rest_name}. "
+                            "Rest and recover. Hydrate and stretch."
+                        ),
+                        "workout": "Rest Day",
+                        "tip": get_beginner_tip(rest_offset, user.get("lang", "e")),
+                    }
+                )
     return sorted(plan, key=lambda s: (s["week"], s["day_offset"]))
 
 
@@ -662,6 +677,9 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Effort",
             "Milestone",
             "Weather",
+            "Motivation",
+            "Session_Rating",
+            "Health_Log",
         ]
         ws.append(columns)
         # Center headings and set bold font
@@ -669,24 +687,39 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             cell = ws.cell(row=1, column=col_idx)
             cell.alignment = Alignment(horizontal="center", vertical="center")
             cell.font = Font(bold=True)
-        # Add data rows (no formulas in cells)
+        # Motivational quotes list
+        motivational_quotes = [
+            "You are stronger than you think!",
+            "Every step counts. Keep going!",
+            "Progress, not perfection.",
+            "Believe in yourself and all that you are.",
+            "Small steps lead to big changes.",
+            "You’re doing great—don’t stop now!",
+            "Consistency is key.",
+            "Your only limit is you.",
+            "Celebrate every victory, no matter how small.",
+            "The journey is just as important as the destination.",
+        ]
         weeks = user.get("weeks", 10)
         days_per_week = user.get("days_per_week", 3)
         total_rows = weeks * days_per_week
         start_day = user.get("start_day")
         if not start_day:
             from datetime import datetime
-
             start_day = datetime(2025, 7, 15)
+        # Custom rest day scheduling
+        rest_days = user.get("rest_days")
+        if not rest_days:
+            rest_days = ["Sat", "Sun"]  # Default
         for i, (week, day) in enumerate(
             ((w, d) for w in range(1, weeks + 1) for d in range(1, days_per_week + 1)),
             start=2,
         ):
-            # Add the day's workout to the notes field for easy visibility
             workout = get_workout_details(week, day, user.get("lang", "e"))
-            ws.append(
-                [week, day, "", "", f"Workout: {workout}", "", "", "", "", "", ""]
-            )
+            quote = motivational_quotes[((week-1)*days_per_week + (day-1)) % len(motivational_quotes)]
+            ws.append([
+                week, day, "", "", f"Workout: {workout}", "", "", "", "", "", "", quote, "", ""
+            ])
             row = i
             ws[f"D{row}"].number_format = "General"
         # Auto-size columns to fit content
@@ -884,7 +917,8 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         add_formula_section(
             "Adjust_Plan (H):",
             [
-                'In H2: =IF(COUNTIF($D$2:$D$N,"N")>=3,"Consider repeating this week or shifting plan","On Track")',
+                'In H2: =IF(AND(COUNTIF($G$2:$G$N,"Missed")>=3,COUNTIF($I$2:$I$N,">=4")>=3),'
+                '"Consider repeating this week or shifting plan","On Track")',
                 "# Replace N with the last row number.",
             ],
         )
@@ -928,7 +962,68 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Goal Gauge:",
             ["Select Goal Progress %, Insert > Doughnut chart."],
         )
-        wb.save(filename)
+        # --- New: Export/Integration, Accessibility, Community, Analytics, FAQ Sections ---
+        add_formula_section(
+            "Export/Integration Features:",
+            [
+                "Apple Health Export: (Planned) Use CSV/ICS export, then import into Apple Health via Shortcuts or 3rd-party app.",
+                "Google Fit Export: Use the Google Fit CSV export option (already available).",
+                "Strava/Runkeeper Export: Use the Strava/Runkeeper export option (already available, stub for direct integration).",
+                "Instructions: For direct integration, see README or use provided scripts/macros (future update).",
+            ],
+        )
+        add_formula_section(
+            "Accessibility Improvements:",
+            [
+                "Screen Reader Tips: Use clear column headers, avoid merged cells, and keep formulas simple.",
+                "All notes and instructions are provided in plain text for compatibility.",
+                "Dark Mode Macro: See below for a VBA macro to enable dark mode in Excel.",
+            ],
+        )
+        ws2["A40"] = "Dark Mode Macro (VBA):"
+        ws2["A41"] = (
+            "Sub DarkMode()\n"
+            "    Dim ws As Worksheet\n"
+            "    Set ws = Sheets(\"Progress\")\n"
+            "    ws.Cells.Interior.Color = RGB(30,30,30)\n"
+            "    ws.Cells.Font.Color = RGB(220,220,220)\n"
+            "    ws.Rows(1).Interior.Color = RGB(50,50,50)\n"
+            "    ws.Rows(1).Font.Color = RGB(255,255,0)\n"
+            "End Sub"
+        )
+        ws2["A42"] = "To use: Press Alt+F11, Insert > Module, paste the macro, and run DarkMode."
+        add_formula_section(
+            "Community & Social Features:",
+            [
+                "Progress Sharing: (Planned) Export your progress as CSV/Markdown and share with friends or a group.",
+                "Group Plans: (Planned) Combine multiple users' trackers for group progress (see README for future updates).",
+                "Leaderboard: (Planned) Track and compare progress with others (future update).",
+            ],
+        )
+        add_formula_section(
+            "Analytics & Custom Metrics:",
+            [
+                "Weather Trend Analysis: (Planned) Use the Weather column to chart performance vs. weather.",
+                "User-Defined Metrics: Add custom columns for any metric you wish to track (e.g., Heart Rate, Steps).",
+                "Charts: Use the Dashboard sheet to visualize any metric (see instructions above).",
+            ],
+        )
+        add_formula_section(
+            "Data Backup, Import & Export:",
+            [
+                "Auto-Backup: Use the provided macro or Excel/Google Sheets version history.",
+                "Import/Export: (Planned) Use CSV/Excel import/export for data migration or backup.",
+                "Instructions: See README for details and future updates.",
+            ],
+        )
+        add_formula_section(
+            "FAQ, Help & Feedback:",
+            [
+                "FAQ: See the README or the FAQ section in this sheet (future update).",
+                "Help: For help with macros or formulas, see the instructions above or contact the project maintainer.",
+                "Feedback: (Planned) Use the feedback form in the README or email for suggestions.",
+            ],
+        )
         # --- Improve Macros & Instructions sheet formatting ---
         # Auto-size columns A-D in ws2
         for col_letter in ["A", "B", "C", "D"]:
