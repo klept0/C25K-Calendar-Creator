@@ -19,28 +19,26 @@ Medical recommendations and plan structure are based on:
   https://www.heart.org/en/healthy-living/fitness/fitness-basics
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Any
 import csv
 import json
 import os
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 from c25k_utils import (
-    reminders,
-    progress,
-    plan_customization,
     accessibility,
+    community,
     mobile_export,
     pdf_export,
-    voice_prompts,
-    community,
+    plan_customization,
+    progress,
+    reminders,
     start_date,
+    voice_prompts,
     weather,
 )
-import openpyxl
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.table import Table, TableStyleInfo
-
 
 # --- Advanced Macros Implementation for progress tracker CSV ---
 # Add these as columns or sheets in name_progress_tracker.csv as appropriate.
@@ -639,15 +637,13 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     Implements all advanced visual cues: checkmarks, rest day highlighting, overdue alerts, sparklines, milestone badges, weekly progress bars, goal gauge, weather icons/colors, accessibility toggle, and notes highlighting.
     Returns the filename.
     """
-    from openpyxl.styles import PatternFill, Alignment, Font, Border, Side
-    from openpyxl.formatting.rule import (
-        CellIsRule,
-        FormulaRule,
-        ColorScaleRule,
-    )
-    from openpyxl.chart import BarChart, Reference
-    from openpyxl.utils import get_column_letter
     import os
+
+    from openpyxl.formatting.rule import (
+        ColorScaleRule,
+        FormulaRule,
+    )
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
     filename = os.path.join(outdir, f"{user['name']}_progress_tracker.xlsx")
     if not os.path.exists(filename):
@@ -942,7 +938,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
                     max_length = max(max_length, len(str(cell.value)))
             ws2.column_dimensions[col_letter].width = max(18, min(max_length + 4, 60))
         # Set alignment and wrap text for all cells
-        from openpyxl.styles import Alignment, Font, Border, Side, PatternFill
+        from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
         thin_border = Border(
             left=Side(style="thin", color="CCCCCC"),
@@ -1183,8 +1179,8 @@ def main() -> None:
     progress_data = progress.import_progress(progress_filename)
     print(progress.generate_progress_summary(progress_data))
     # --- Auto-insert macros into Excel tracker ---
-    import subprocess
     import stat
+    import subprocess
 
     macro_inserter = os.path.join(
         os.path.dirname(__file__), "c25k_excel_macro_inserter.py"
