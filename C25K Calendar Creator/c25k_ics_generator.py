@@ -626,7 +626,6 @@ def get_output_dir(user):
     safe_name = user["name"].replace(" ", "_")
     outdir = os.path.join(
         os.path.dirname(__file__),
-        "..",
         "created",
         f"{safe_name}-{user['age']}-{start_str}",
     )
@@ -687,7 +686,11 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             ((w, d) for w in range(1, weeks + 1) for d in range(1, days_per_week + 1)),
             start=2,
         ):
-            ws.append([week, day, "", "", "", "", "", "", "", "", ""])
+            # Add the day's workout to the notes field for easy visibility
+            workout = get_workout_details(week, day, user.get("lang", "e"))
+            ws.append(
+                [week, day, "", "", f"Workout: {workout}", "", "", "", "", "", ""]
+            )
             row = i
             ws[f"D{row}"].number_format = "General"
         # Auto-size columns to fit content
