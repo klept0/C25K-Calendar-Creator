@@ -35,9 +35,8 @@ from c25k_utils import (
 )
 
 
-# --- Advanced Macros Implementation for progress.csv ---
-# These are formulas and macro instructions for spreadsheet users.
-# Add these as columns or sheets in progress.csv as appropriate.
+# --- Advanced Macros Implementation for progress tracker CSV ---
+# Add these as columns or sheets in name_progress_tracker.csv as appropriate.
 #
 # 1. Streak Counter (formula for Google Sheets/Excel):
 #    Add a column 'Current_Streak'. In row 2 (first data row):
@@ -107,7 +106,7 @@ def colorize(text, color, bold=False):
 
 def get_user_info() -> Optional[Dict[str, Any]]:
     """
-    Prompt user for name, age, weight (metric or imperial), gender,
+    Prompt user for name, age, weight (imperial by default), gender,
     session time, language, personal goal, and advanced options.
     Returns a dict or None if incomplete.
     """
@@ -116,10 +115,11 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         if not name:
             print(colorize("Name is required.", "red", bold=True))
             return None
+        # Default to imperial units
         unit = (
             input(
                 colorize(
-                    "Choose units: [M]etric (kg) or [I]mperial (lbs)? ",
+                    "Choose units: [I]mperial (lbs, default) or [M]etric (kg)? ",
                     "blue",
                     bold=True,
                 )
@@ -127,10 +127,14 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             .strip()
             .lower()
         )
-        if unit not in ("m", "i"):
+        if unit == "" or unit == "i":
+            unit = "i"
+        elif unit == "m":
+            unit = "m"
+        else:
             print(
                 colorize(
-                    "Please enter 'M' for Metric or 'I' for Imperial.",
+                    "Please enter 'I' for Imperial or 'M' for Metric.",
                     "red",
                     bold=True,
                 )
@@ -298,7 +302,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         # Advanced: location for weather
         location = input(
             colorize(
-                "Enter your city or ZIP for weather suggestions (optional): ",
+                "Enter your city or ZIP for weather suggestions (optional, default F°): ",
                 "cyan",
                 bold=True,
             )
@@ -622,6 +626,52 @@ def get_output_dir(user):
     return outdir
 
 
+def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
+    """
+    Create a progress tracker CSV in the output directory with the correct name and columns.
+    Returns the filename.
+    """
+    filename = os.path.join(outdir, f"{user['name']}_progress_tracker.csv")
+    if not os.path.exists(filename):
+        fieldnames = [
+            "week",
+            "day",
+            "date_completed",
+            "completed",
+            "notes",
+            "Current_Streak",
+            "Missed",
+            "Adjust_Plan",
+            "Effort",
+            "Milestone",
+            "Weather",
+        ]
+        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            # Pre-fill for a standard 10-week, 3-day-per-week plan
+            weeks = user.get("weeks", 10)
+            days_per_week = user.get("days_per_week", 3)
+            for week in range(1, weeks + 1):
+                for day in range(1, days_per_week + 1):
+                    writer.writerow(
+                        {
+                            "week": week,
+                            "day": day,
+                            "date_completed": "",
+                            "completed": "",
+                            "notes": "",
+                            "Current_Streak": "",
+                            "Missed": "",
+                            "Adjust_Plan": "",
+                            "Effort": "",
+                            "Milestone": "",
+                            "Weather": "",
+                        }
+                    )
+    return filename
+
+
 def main() -> None:
     """
     Main execution block for the Couch to 5K ICS Generator.
@@ -744,18 +794,86 @@ def main() -> None:
         if user["large_font"]:
             print("Large font", end="")
         print()
-    # Reminders (stub)
+    # Reminders (rain/weather-aware)
     if user.get("email"):
-        print(f"Sending reminder to {user['email']} for your first workout...")
-        reminders.send_reminder(user["email"], plan[0], user["lang"])
+        # Try to get weather for the first workout
+        weather_info = None
+        if user.get("location") and plan and plan[0].get("date"):
+            weather_info = weather.get_weather_suggestion(
+                user["location"], plan[0]["date"]
+            )
+            print(colorize(f"Weather for first workout: {weather_info}", "cyan"))
+        rain_expected = False
+        if weather_info:
+            rain_expected = (
+                "rain likely" in weather_info.lower() or "rainy" in weather_info.lower()
+            )
+        if rain_expected:
+            reminder_msg = (
+                "Rain is expected for your first workout! "
+                "Consider rescheduling or bringing rain gear."
+            )
+            print(colorize(reminder_msg, "yellow", bold=True))
+            reminders.send_reminder(
+                user["email"], f"{plan[0]}\n{reminder_msg}", user["lang"]
+            )
+        else:
+            # Detect inclement weather (rain, snow, fog, extreme heat/cold)
+            inclement = False
+            inclement_reasons = []
+            if weather_info:
+                info = weather_info.lower()
+                if (
+                    "rain likely" in info
+                    or "rainy" in info
+                    or "snowy" in info
+                    or "foggy" in info
+                    or "showers" in info
+                ):
+                    inclement = True
+                    if "rain" in info or "showers" in info:
+                        inclement_reasons.append("rain")
+                    if "snow" in info or "snowy" in info:
+                        inclement_reasons.append("snow")
+                    if "fog" in info or "foggy" in info:
+                        inclement_reasons.append("fog")
+                # Check for extreme heat/cold
+                import re
+
+                temp_match = re.search(r"(\d+)-(\d+)°f", info)
+                if temp_match:
+                    tmin = int(temp_match.group(1))
+                    tmax = int(temp_match.group(2))
+                    if tmax >= 90:
+                        inclement = True
+                        inclement_reasons.append("high heat")
+                    if tmin <= 32:
+                        inclement = True
+                        inclement_reasons.append("freezing cold")
+            if inclement:
+                reason_str = ", ".join(set(inclement_reasons))
+                reminder_msg = (
+                    f"Inclement weather expected for your first workout: "
+                    f"{reason_str}. "
+                    "Consider rescheduling or taking extra precautions."
+                )
+                print(colorize(reminder_msg, "yellow", bold=True))
+                reminders.send_reminder(
+                    user["email"], f"{plan[0]}\n{reminder_msg}", user["lang"]
+                )
+            else:
+                reminders.send_reminder(user["email"], plan[0], user["lang"])
     # Community/sharing (stub)
     community.share_plan(str(plan), platform="email")
     # Progress tracking (stub)
-    progress_data = progress.import_progress("progress.csv")
+    # Create the progress tracker file if it doesn't exist
+    progress_filename = create_progress_tracker(user, outdir)
+    progress_data = progress.import_progress(progress_filename)
     print(progress.generate_progress_summary(progress_data))
     print(
         colorize(
-            "\nAll done! Your personalized C25K plan and exports are ready. Good luck!",
+            "\nAll done! Your personalized C25K plan and exports are ready. "
+            "Good luck!",
             "green",
             bold=True,
         )

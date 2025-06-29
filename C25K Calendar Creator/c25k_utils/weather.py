@@ -10,11 +10,14 @@ import requests
 def get_weather_suggestion(location: str, workout_date: str) -> str:
     """
     Fetch a simple weather forecast for the given location and date using Open-Meteo (free, no API key required).
-    Returns a brief suggestion string.
+    Returns a brief suggestion string in Fahrenheit.
     """
     try:
         # Geocoding: get lat/lon from location (city or ZIP) using Open-Meteo geocoding
-        geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={location}&count=1&language=en&format=json"
+        geo_url = (
+            f"https://geocoding-api.open-meteo.com/v1/search?name={location}"
+            f"&count=1&language=en&format=json"
+        )
         geo_resp = requests.get(geo_url, timeout=5)
         geo_data = geo_resp.json()
         if not geo_data.get("results"):
@@ -23,10 +26,14 @@ def get_weather_suggestion(location: str, workout_date: str) -> str:
         lon = geo_data["results"][0]["longitude"]
         # Get date in YYYY-MM-DD
         date_str = workout_date[:10]
-        # Weather forecast: get daily summary for that date
+        # Weather forecast: get daily summary for that date, enforce Fahrenheit
         weather_url = (
-            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-            f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=auto&start_date={date_str}&end_date={date_str}"
+            f"https://api.open-meteo.com/v1/forecast?latitude={lat}"
+            f"&longitude={lon}"
+            f"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,"
+            f"weathercode"
+            f"&timezone=auto&start_date={date_str}&end_date={date_str}"
+            f"&temperature_unit=fahrenheit"
         )
         weather_resp = requests.get(weather_url, timeout=5)
         weather = weather_resp.json().get("daily", {})
@@ -37,12 +44,13 @@ def get_weather_suggestion(location: str, workout_date: str) -> str:
         precip = weather["precipitation_sum"][0]
         code = weather["weathercode"][0]
         # Simple interpretation
-        desc = f"{tmin:.0f}-{tmax:.0f}°C, "
+        desc = f"{tmin:.0f}-{tmax:.0f}°F, "
         if precip > 2:
             desc += "rain likely, "
         elif precip > 0:
             desc += "chance of showers, "
-        # Weather code: 0=clear, 1-3=partly/cloudy, 45/48=fog, 51+=rain, 71+=snow
+        # Weather code: 0=clear, 1-3=partly/cloudy, 45/48=fog,
+        # 51+=rain, 71+=snow
         if code == 0:
             desc += "clear skies."
         elif code in [1, 2, 3]:

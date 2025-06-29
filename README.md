@@ -5,13 +5,19 @@ Random Things I Have Made - random ideas that may not be 100%
 ## Contents
 
 - **C25K Calendar Creator**
+  <details>
+    <summary>Show details</summary>
+
   - `c25k_ics_generator.py`: Couch to 5K calendar and checklist generator with health, localization, and export features.
-  - `c25k_ics_generator.md`: Full documentation and usage guide for the C25K tool.
+  - `c25k_ics_generator_readme.md`: Full documentation and usage guide for the C25K tool.
   - Output files: `.ics`, `.csv`, `.json`, Google Fit CSV, and Markdown checklist.
+
+  </details>
 
 ---
 
-## Advanced Features
+<details>
+<summary>Advanced Features</summary>
 
 - **Plan Customization:** Choose number of weeks and days per week for your plan.
 - **Accessibility:** High-contrast and large-font options for Markdown checklist.
@@ -27,9 +33,10 @@ Random Things I Have Made - random ideas that may not be 100%
 
 See the tool's README for details on each feature and how to use them.
 
-See each tool's README or markdown file for details and usage instructions.
+</details>
 
-## Medical Sources and References
+<details>
+<summary>Medical Sources and References</summary>
 
 - NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
 - CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
@@ -37,7 +44,10 @@ See each tool's README or markdown file for details and usage instructions.
 
 All medical and health-related logic in this script is for informational purposes only and is based on the above reputable sources. Always consult your healthcare provider before starting any new exercise program.
 
-## Progress Tracking Macros
+</details>
+
+<details>
+<summary>Progress Tracking Macros</summary>
 
 The `progress.csv` file includes built-in spreadsheet macros to help you track your Couch to 5K journey:
 
@@ -50,7 +60,10 @@ The `progress.csv` file includes built-in spreadsheet macros to help you track y
 
 These macros work in Excel, Google Sheets, and most spreadsheet programs. See the comments in `progress.csv` for more details.
 
-## Advanced Macros in Progress Tracker (Automated Columns)
+</details>
+
+<details>
+<summary>Advanced Macros in Progress Tracker (Automated Columns)</summary>
 
 The following advanced macros are now included as columns in `progress.csv`:
 
@@ -68,3 +81,14 @@ Other macros:
 - **Auto-Backup/Versioning**: Use File > Version history (Google Sheets) or a VBA macro (Excel).
 
 All formulas/macros are beginner-friendly and can be copy-pasted or are pre-filled in the CSV. See the tool and repo README for more details.
+
+</details>
+
+---
+
+**Default Settings:**
+
+- Units: Imperial (lbs)
+- Temperature: Fahrenheit (°F)
+
+The tool defaults to imperial units and Fahrenheit for weather. You can change these in the prompts or settings.

@@ -132,3 +132,5 @@ All medical and health-related logic in this script is for informational purpose
 
 **Author:** [klept0]
 **License:** MIT
+
+**Tool README:** See `c25k_ics_generator_readme.md` in this folder for full usage, features, and advanced options.

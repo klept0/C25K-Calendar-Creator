@@ -4,6 +4,7 @@ Handles progress tracking import and summary generation.
 Stub: To be implemented with import and summary logic.
 """
 
+import os
 import csv
 from typing import List, Dict
 
@@ -15,6 +16,12 @@ def import_progress(file_path: str) -> List[Dict[str, str]]:
     """
     progress = []
     try:
+        # If a relative path is given, check in the created output folder
+        if not os.path.isabs(file_path) and not os.path.exists(file_path):
+            # Try to find in created/ subfolder
+            created_path = os.path.join("created", file_path)
+            if os.path.exists(created_path):
+                file_path = created_path
         with open(file_path, newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
