@@ -1,0 +1,3 @@
+# Requirements for Couch to 5K ICS Generator
+# Standard library only, except for requests (for weather integration)
+requests>=2.0.0

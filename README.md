@@ -28,3 +28,11 @@ Random Things I Have Made - random ideas that may not be 100%
 See the tool's README for details on each feature and how to use them.
 
 See each tool's README or markdown file for details and usage instructions.
+
+## Medical Sources and References
+
+- NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
+- CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
+- American Heart Association: https://www.heart.org/en/healthy-living/fitness/fitness-basics
+
+All medical and health-related logic in this script is for informational purposes only and is based on the above reputable sources. Always consult your healthcare provider before starting any new exercise program.

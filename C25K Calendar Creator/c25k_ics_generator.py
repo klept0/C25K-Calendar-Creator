@@ -10,10 +10,10 @@ conditions. Use this script at your own risk. The author assumes no
 responsibility for any injury or health issues that may result from using
 this script.
 
-This script generates a personalized Couch to 5K calendar (.ics) file,
-tailored for users with hypertension. It customizes the workout plan
-based on your age, weight, and gender. If any required information is
-missing, the script will prompt you and will not generate the calendar file.
+Medical recommendations and plan structure are based on:
+- NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
+- CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
+- American Heart Association: https://www.heart.org/en/healthy-living/fitness/fitness-basics
 """
 
 from datetime import datetime, timedelta
@@ -167,6 +167,7 @@ def get_workout_details(week: int, day: int, lang: str = "e") -> str:
     """
     Return a string describing the actual workout for the given week and day.
     Supports English and Spanish.
+    Workouts are based on the NHS Couch to 5K program.
     """
     workouts_en = [
         "Brisk 5-min warmup walk. Then alternate 60 sec jogging and 90 sec "
@@ -206,6 +207,7 @@ def get_workout_details(week: int, day: int, lang: str = "e") -> str:
 def get_beginner_tip(day: int, lang: str = "e") -> str:
     """
     Return a motivational or safety tip for the given day.
+    Tips are based on NHS, CDC, and AHA recommendations for beginners.
     """
     tips_en = [
         "Remember to stretch before and after your workout!",
@@ -238,7 +240,7 @@ def get_beginner_tip(day: int, lang: str = "e") -> str:
 def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Return a plan (list of dicts) based on age, weight, and plan customization.
-    Adjusts session duration for older or heavier users.
+    Adjusts session duration for older or heavier users (age >= 60 or weight >= 100kg) for safety.
     Adds actual workout details and tips for each session.
     """
     weeks = user.get("weeks", 10)
@@ -313,6 +315,7 @@ def generate_ics(
     Generate the ICS file from the workout plan and start date.
     Add the actual workout, tip, and rest days to the DESCRIPTION and NOTES fields.
     Add a VALARM block for custom alert time if alert_minutes > 0.
+    ICS format is compatible with Apple/Google Calendar and most calendar apps.
     """
     ics_content = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Couch to 5K//EN\n"
     for session in plan:

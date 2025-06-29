@@ -7,7 +7,7 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
 ## Features
 
 - **Customizable Start Date and Time:** Set your preferred program start date and session start time.
-- **Personalized Plan:** Adjusts session duration for older or heavier users.
+- **Personalized Plan:** Adjusts session duration for older or heavier users, based on safety recommendations from NHS, CDC, and AHA.
 - **Health Reminder:** Includes a note to monitor health and consult a doctor if needed.
 - **Localization:** Supports English and Spanish for all workout instructions.
 - **Multiple Export Formats:**
@@ -17,7 +17,7 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
   - Google Fit compatible `.csv`
   - Markdown checklist for tracking
 - **Hydration and Safety Reminders:** Each workout includes hydration and safety notes.
-- **Beginner Tips:** Each day includes a motivational or safety tip.
+- **Beginner Tips:** Each day includes a motivational or safety tip (based on NHS, CDC, and AHA guidance).
 - **Rest Days:** Rest days are included in all exports and the checklist.
 - **Personal Goal:** Option to set a personal goal, included in the checklist.
 - **Resource Link:** Checklist includes a link to a reputable C25K guide.
@@ -81,6 +81,14 @@ start_day = datetime(2025, 7, 15)
 
 - All advanced features are optional and can be accessed via prompts when running the script.
 - Stubs indicate features that can be extended with real integrations.
+
+## Medical Sources and References
+
+- NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
+- CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
+- American Heart Association: https://www.heart.org/en/healthy-living/fitness/fitness-basics
+
+All medical and health-related logic in this script is for informational purposes only and is based on the above reputable sources. Always consult your healthcare provider before starting any new exercise program.
 
 ## Disclaimer
 
