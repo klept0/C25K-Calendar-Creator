@@ -22,17 +22,29 @@ from typing import Optional, Dict, List, Any
 
 def get_user_info() -> Optional[Dict[str, Any]]:
     """
-    Prompt user for age, weight, and gender.
+    Prompt user for age, weight (metric or imperial), and gender.
     Returns a dict or None if incomplete.
     """
     try:
+        unit = (
+            input("Choose units: [M]etric (kg) or [I]mperial (lbs)? ".strip())
+            .strip()
+            .lower()
+        )
+        if unit not in ("m", "i"):
+            print("Please enter 'M' for Metric or 'I' for Imperial.")
+            return None
         age = int(input("Enter your age (years): ").strip())
-        weight = float(input("Enter your weight (kg): ").strip())
+        if unit == "m":
+            weight = float(input("Enter your weight (kg): ").strip())
+        else:
+            weight = float(input("Enter your weight (lbs): ").strip())
+            weight = weight * 0.453592  # Convert lbs to kg
         gender = input("Enter your gender (male/female): ").strip().lower()
         if gender not in ["male", "female"]:
             print("Gender must be 'male' or 'female'.")
             return None
-        return {"age": age, "weight": weight, "gender": gender}
+        return {"age": age, "weight": weight, "gender": gender, "unit": unit}
     except (ValueError, TypeError):
         print("Invalid input. Please enter valid numbers for age and weight.")
         return None
