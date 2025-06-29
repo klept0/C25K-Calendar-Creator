@@ -4,18 +4,13 @@ Random Things I Have Made - random ideas that may not be 100%
 
 ## Contents
 
-- **C25K Calendar Creator**
-  <details>
-    <summary>Show details</summary>
+<details>
+<summary><strong>C25K Calendar Creator</strong></summary>
 
-  - `c25k_ics_generator.py`: Couch to 5K calendar and checklist generator with health, localization, and export features.
-  - `c25k_ics_generator_readme.md`: Full documentation and usage guide for the C25K tool.
-  - `c25k_excel_macro_inserter.py`: Script to auto-insert macros and formulas into the Excel progress tracker.
-  - Output files: `.ics`, `.csv`, `.json`, Google Fit CSV, Markdown checklist, and Excel progress tracker with advanced macros and visual cues.
-
-  </details>
-
----
+- `c25k_ics_generator.py`: Couch to 5K calendar and checklist generator with health, localization, and export features.
+- `c25k_ics_generator_readme.md`: Full documentation and usage guide for the C25K tool.
+- `c25k_excel_macro_inserter.py`: Script to auto-insert macros and formulas into the Excel progress tracker.
+- Output files: `.ics`, `.csv`, `.json`, Google Fit CSV, Markdown checklist, and Excel progress tracker with advanced macros and visual cues.
 
 <details>
 <summary>Advanced Features</summary>
@@ -36,17 +31,6 @@ See the tool's README for details on each feature and how to use them.
 </details>
 
 <details>
-<summary>Medical Sources and References</summary>
-
-- NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
-- CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
-- American Heart Association: https://www.heart.org/en/healthy-living/fitness/fitness-basics
-
-All medical and health-related logic in this script is for informational purposes only and is based on the above reputable sources. Always consult your healthcare provider before starting any new exercise program.
-
-</details>
-
-<details>
 <summary>Excel Progress Tracker & Macros</summary>
 
 The progress tracker Excel file (`<name>_progress_tracker.xlsx`) is automatically generated and includes built-in spreadsheet macros and instructions to help you track your Couch to 5K journey:
@@ -61,6 +45,17 @@ All formulas/macros are beginner-friendly and can be copy-pasted or are pre-fill
 
 </details>
 
+<details>
+<summary>Medical Sources and References</summary>
+
+- NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/
+- CDC Physical Activity Guidelines: https://www.cdc.gov/physicalactivity/basics/index.htm
+- American Heart Association: https://www.heart.org/en/healthy-living/fitness/fitness-basics
+
+All medical and health-related logic in this script is for informational purposes only and is based on the above reputable sources. Always consult your healthcare provider before starting any new exercise program.
+
+</details>
+
 ---
 
 **Default Settings:**
@@ -69,3 +64,5 @@ All formulas/macros are beginner-friendly and can be copy-pasted or are pre-fill
 - Temperature: Fahrenheit (°F)
 
 The tool defaults to imperial units and Fahrenheit for weather. You can change these in the prompts or settings.
+
+</details>
