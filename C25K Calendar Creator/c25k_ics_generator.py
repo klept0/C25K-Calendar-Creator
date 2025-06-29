@@ -125,6 +125,20 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         location = input(
             "Enter your city or ZIP for weather suggestions (optional): "
         ).strip()
+        # Custom alert time for ICS
+        alert_minutes = None
+        if export == "i":
+            alert_input = input(
+                "Alert before session (minutes, default 30, 0=none): "
+            ).strip()
+            if alert_input == "":
+                alert_minutes = 30
+            else:
+                try:
+                    alert_minutes = int(alert_input)
+                except Exception:
+                    print("Invalid alert time. Using default 30 minutes.")
+                    alert_minutes = 30
         return {
             "age": age,
             "weight": weight,
@@ -142,6 +156,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             "start_day": start_day,
             "email": email,
             "location": location,
+            "alert_minutes": alert_minutes,
         }
     except (ValueError, TypeError):
         print("Invalid input. Please enter valid numbers for age and weight.")
@@ -288,11 +303,16 @@ def format_ics_datetime(dt: datetime) -> str:
 
 
 def generate_ics(
-    plan: List[Dict[str, Any]], start_day: datetime, hour: int, minute: int
+    plan: List[Dict[str, Any]],
+    start_day: datetime,
+    hour: int,
+    minute: int,
+    alert_minutes: int = 30,
 ) -> None:
     """
     Generate the ICS file from the workout plan and start date.
     Add the actual workout, tip, and rest days to the DESCRIPTION and NOTES fields.
+    Add a VALARM block for custom alert time if alert_minutes > 0.
     """
     ics_content = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Couch to 5K//EN\n"
     for session in plan:
@@ -312,8 +332,17 @@ def generate_ics(
             f"DTEND;TZID=America/New_York:{format_ics_datetime(dt_end)}\n"
             f"DESCRIPTION:{session['description']}\n"
             f"X-APPLE-NOTES:Workout: {session['workout']} | Tip: {session['tip']}\n"
-            f"END:VEVENT\n"
         )
+        # Add VALARM if alert_minutes > 0 and not a rest day
+        if alert_minutes and session["duration"] > 0:
+            ics_content += (
+                "BEGIN:VALARM\n"
+                f"TRIGGER:-PT{alert_minutes}M\n"
+                "ACTION:DISPLAY\n"
+                "DESCRIPTION:Time for your C25K session!\n"
+                "END:VALARM\n"
+            )
+        ics_content += "END:VEVENT\n"
     ics_content += "END:VCALENDAR"
     with open("Couch_to_5K_Reminders.ics", "w", encoding="utf-8") as f:
         f.write(ics_content)
@@ -438,7 +467,9 @@ def main() -> None:
         print(f"Weather suggestion for your first workout: {suggestion}")
     # Export logic
     if user["export"] == "i":
-        generate_ics(plan, start_day, user["hour"], user["minute"])
+        generate_ics(
+            plan, start_day, user["hour"], user["minute"], user.get("alert_minutes", 30)
+        )
     elif user["export"] == "c":
         export_csv(plan, "Couch_to_5K_Reminders.csv")
     elif user["export"] == "j":

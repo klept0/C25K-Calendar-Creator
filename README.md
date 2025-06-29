@@ -23,6 +23,7 @@ Random Things I Have Made - random ideas that may not be 100%
 - **PDF Export:** Export plan as a PDF (stub).
 - **Voice Prompts:** Export voice/text prompts for workouts (stub).
 - **Community/Sharing:** Share your plan via email (stub).
+- **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
 
 See the tool's README for details on each feature and how to use them.
 

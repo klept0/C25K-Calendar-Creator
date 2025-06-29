@@ -21,6 +21,7 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
 - **Rest Days:** Rest days are included in all exports and the checklist.
 - **Personal Goal:** Option to set a personal goal, included in the checklist.
 - **Resource Link:** Checklist includes a link to a reputable C25K guide.
+- **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
 
 ## Usage
 
@@ -39,6 +40,7 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
      - Session start time (24h format, e.g., 07:00)
      - Language (English or Spanish)
      - Export format (ICS, CSV, JSON, Google Fit CSV)
+     - **Alert time before session (minutes, for ICS export only)**
      - Personal goal (optional)
    - If any information is missing or invalid, the script will not generate the calendar.
 3. **Import the Calendar or Data:**
@@ -73,6 +75,7 @@ start_day = datetime(2025, 7, 15)
 - **PDF Export:** Export plan as a PDF (stub).
 - **Voice Prompts:** Export voice/text prompts for workouts (stub).
 - **Community/Sharing:** Share your plan via email (stub).
+- **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
 
 ### Usage Notes
 
