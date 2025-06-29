@@ -82,6 +82,38 @@ start_day = datetime(2025, 7, 15)
 - All advanced features are optional and can be accessed via prompts when running the script.
 - Stubs indicate features that can be extended with real integrations.
 
+## Progress Tracking Macros
+
+The `progress.csv` file includes built-in spreadsheet macros to help you track your Couch to 5K journey:
+
+- **Auto-fill Today’s Date:** Use `=TODAY()` in the `date_completed` column.
+- **Total Completed Sessions:** `=COUNTIF(D2:D31,"Y")`
+- **Progress Percentage:** `=COUNTIF(D2:D31,"Y")/COUNTA(D2:D31)`
+- **Next Session to Complete:** `=MATCH("",D2:D31,0)+1`
+- **Days Since Last Session:** `=TODAY()-MAX(C2:C31)`
+- **Motivational Message:** `=IF(COUNTIF(D2:D31,"Y")=COUNTA(D2:D31),"Congratulations! You finished!","Keep going, you're doing great!")`
+
+These macros work in Excel, Google Sheets, and most spreadsheet programs. See the comments in `progress.csv` for more details.
+
+## Advanced Macros in Progress Tracker (Automated Columns)
+
+The following advanced macros are now included as columns in `progress.csv`:
+
+- **Current_Streak**: Tracks the current streak of completed sessions. Use `=IF(D2="Y",1,0)` in F2, then `=IF(D3="Y",F2+1,0)` down the column. Longest streak: `=MAX(F2:F31)`.
+- **Missed**: Flags missed sessions. Use `=IF(AND(C2="",TODAY()-DATE(2025,7,15)+(ROW()-2)*2>2),"Missed","")` in G2.
+- **Adjust_Plan**: Suggests plan adjustment if 3+ sessions are missed. Use `=IF(COUNTIF($D$2:$D$31,"N")>=3,"Consider repeating this week or shifting plan","On Track")` in H2.
+- **Effort**: User rates each session (1-5 or Easy/Medium/Hard). Add conditional formatting for trends.
+- **Milestone**: Celebrates milestones. Use `=IF(AND(A2=1,B2=3),"First week done!",IF(AND(A2=5,B2=3),"Halfway!",IF(AND(A2=10,B2=3),"C25K Complete!","")))` in J2.
+- **Weather**: User logs weather/conditions for each session.
+
+Other macros:
+
+- **Goal Progress Visualization**: `=COUNTIF(D2:D31,"Y")/COUNTA(D2:D31)`
+- **Weekly Summary**: Insert a row after each week and use `=COUNTIF(D2:D4,"Y")` for completed, `=COUNTIF(G2:G4,"Missed")` for missed, and a motivational message formula.
+- **Auto-Backup/Versioning**: Use File > Version history (Google Sheets) or a VBA macro (Excel).
+
+All formulas/macros are beginner-friendly and can be copy-pasted or are pre-filled in the CSV. See the tool and repo README for more details.
+
 ## Medical Sources and References
 
 - NHS Couch to 5K: https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/

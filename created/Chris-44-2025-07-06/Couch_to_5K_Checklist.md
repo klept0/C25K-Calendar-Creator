@@ -1,0 +1,327 @@
+# Couch to 5K Checklist
+
+**Name:** Chris
+
+**Age:** 44
+
+**Start Date:** 2025-07-06
+
+**Personal Goal:** finish this program
+
+**Resource:** [C25K Guide](https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/)
+
+- [ ] Week 1 Day 1: Brisk 5-min warmup walk. Then alternate 60 sec jogging and 90 sec walking for 20 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Day 2: Brisk 5-min warmup walk. Then alternate 60 sec jogging and 90 sec walking for 20 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Day 3: Brisk 5-min warmup walk. Then alternate 60 sec jogging and 90 sec walking for 20 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 1 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Day 1: Brisk 5-min warmup walk. Then alternate 90 sec jogging, 2 min walking for 20 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Day 2: Brisk 5-min warmup walk. Then alternate 90 sec jogging, 2 min walking for 20 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Day 3: Brisk 5-min warmup walk. Then alternate 90 sec jogging, 2 min walking for 20 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 2 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Day 1: Brisk 5-min warmup walk. 90 sec jog, 90 sec walk, 3 min jog, 3 min walk, repeat. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Day 2: Brisk 5-min warmup walk. 90 sec jog, 90 sec walk, 3 min jog, 3 min walk, repeat. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Day 3: Brisk 5-min warmup walk. 90 sec jog, 90 sec walk, 3 min jog, 3 min walk, repeat. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 3 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Day 1: Brisk 5-min warmup walk. Jog 3 min, walk 90 sec, jog 5 min, walk 2.5 min, jog 3 min, walk 90 sec, jog 5 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Day 2: Brisk 5-min warmup walk. Jog 3 min, walk 90 sec, jog 5 min, walk 2.5 min, jog 3 min, walk 90 sec, jog 5 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Day 3: Brisk 5-min warmup walk. Jog 3 min, walk 90 sec, jog 5 min, walk 2.5 min, jog 3 min, walk 90 sec, jog 5 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 4 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Day 1: Brisk 5-min warmup walk. Jog 5 min, walk 3 min, jog 5 min, walk 3 min, jog 5 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Day 2: Brisk 5-min warmup walk. Jog 5 min, walk 3 min, jog 5 min, walk 3 min, jog 5 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Day 3: Brisk 5-min warmup walk. Jog 5 min, walk 3 min, jog 5 min, walk 3 min, jog 5 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 5 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Day 1: Brisk 5-min warmup walk. Jog 8 min, walk 5 min, jog 8 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Day 2: Brisk 5-min warmup walk. Jog 8 min, walk 5 min, jog 8 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Day 3: Brisk 5-min warmup walk. Jog 8 min, walk 5 min, jog 8 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 6 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Day 1: Brisk 5-min warmup walk. Jog 25 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Day 2: Brisk 5-min warmup walk. Jog 25 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Day 3: Brisk 5-min warmup walk. Jog 25 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 7 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Day 1: Brisk 5-min warmup walk. Jog 28 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Day 2: Brisk 5-min warmup walk. Jog 28 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Day 3: Brisk 5-min warmup walk. Jog 28 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 8 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Day 1: Brisk 5-min warmup walk. Jog 30 min. Hydrate before and after.
+  - Tip: Remember to stretch before and after your workout!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Day 2: Brisk 5-min warmup walk. Jog 30 min. Hydrate before and after.
+  - Tip: Wear comfortable shoes and clothing.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Thu: Rest Day
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Day 3: Brisk 5-min warmup walk. Jog 30 min. Hydrate before and after.
+  - Tip: Stay hydrated and listen to your body.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Fri: Rest Day
+  - Tip: Rest is as important as running. Take it easy on rest days!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Sat: Rest Day
+  - Tip: Track your progress and celebrate small wins.
+  - Notes: ________________________________
+    ________________________________
+    ________________________________
+- [ ] Week 9 Sun: Rest Day
+  - Tip: Invite a friend or family member to join you!
+  - Notes: ________________________________
+    ________________________________
+    ________________________________

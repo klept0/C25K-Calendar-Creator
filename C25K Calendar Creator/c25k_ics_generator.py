@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Any
 import csv
 import json
+import os
 from c25k_utils import (
     reminders,
     progress,
@@ -34,74 +35,243 @@ from c25k_utils import (
 )
 
 
+# --- Advanced Macros Implementation for progress.csv ---
+# These are formulas and macro instructions for spreadsheet users.
+# Add these as columns or sheets in progress.csv as appropriate.
+#
+# 1. Streak Counter (formula for Google Sheets/Excel):
+#    Add a column 'Current_Streak'. In row 2 (first data row):
+#      =IF([@completed]="Y",1,0)
+#    In row 3 and down:
+#      =IF([@completed]="Y",OFFSET([@Current_Streak],-1,0)+1,0)
+#    Longest streak: =MAX(Current_Streak)
+#
+# 2. Missed Sessions Alert:
+#    Add a column 'Missed'. Formula:
+#      =IF(AND([@date_completed]="",TODAY()-[@date_scheduled]>2),"Missed","")
+#    (Assumes a 'date_scheduled' column exists.)
+#
+# 3. Adaptive Plan Adjuster:
+#    Add a column 'Adjust_Plan'. Formula:
+#      =IF(COUNTIF([completed],"N")>=3,"Consider repeating this week or shifting plan","On Track")
+#
+# 4. Weekly Summary Generator:
+#    At the end of each week, insert a summary row with formulas:
+#      Sessions Completed: =COUNTIF([completed],"Y")
+#      Sessions Missed: =COUNTIF([Missed],"Missed")
+#      Motivational Msg: =IF([Sessions Completed]=[Total Sessions],"Great job!","Keep going!")
+#
+# 5. Effort/Feeling Tracker:
+#    Add a column 'Effort' (1-5 or Easy/Medium/Hard). Use conditional formatting for trends.
+#    For chart: Insert a bar/line chart of Effort vs. Date.
+#
+# 6. Goal Progress Visualization:
+#    Add a cell for progress percent:
+#      =COUNTIF([completed],"Y")/COUNTA([completed])
+#    Insert a progress bar chart using this value.
+#
+# 7. Custom Milestone Celebrations:
+#    Add a column 'Milestone'. Formula:
+#      =IF(AND([@week]=1,[@day]=3),"First week done!",IF(AND([@week]=5,[@day]=3),"Halfway!",IF(AND([@week]=10,[@day]=3),"C25K Complete!","") ) )
+#    Use conditional formatting to highlight these rows.
+#
+# 8. Weather/Condition Log:
+#    Add a column 'Weather'. User logs weather/conditions for each session.
+#    For trends: Insert a pivot table or chart by weather type.
+#
+# 9. Auto-Backup/Versioning:
+#    Use spreadsheet's built-in version history, or set up a macro/script to copy the sheet weekly:
+#      (Google Sheets: File > Version history > Name current version)
+#      (Excel: VBA macro to copy sheet to a new tab with timestamp)
+#
+# All formulas/macros are beginner-friendly and can be copy-pasted into the spreadsheet. See README for more details.
+
+
+def colorize(text, color, bold=False):
+    colors = {
+        "cyan": "\033[96m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+        "red": "\033[91m",
+        "magenta": "\033[95m",
+        "blue": "\033[94m",
+        "white": "\033[97m",
+        "reset": "\033[0m",
+        "bold": "\033[1m",
+    }
+    prefix = colors.get(color, "")
+    if bold:
+        prefix = colors["bold"] + prefix
+    return f"{prefix}{text}{colors['reset']}"
+
+
 def get_user_info() -> Optional[Dict[str, Any]]:
     """
-    Prompt user for age, weight (metric or imperial), gender, session time, language, personal goal, and advanced options.
+    Prompt user for name, age, weight (metric or imperial), gender,
+    session time, language, personal goal, and advanced options.
     Returns a dict or None if incomplete.
     """
     try:
+        name = input(colorize("Enter your name: ", "green", bold=True)).strip()
+        if not name:
+            print(colorize("Name is required.", "red", bold=True))
+            return None
         unit = (
-            input("Choose units: [M]etric (kg) or [I]mperial (lbs)? ").strip().lower()
+            input(
+                colorize(
+                    "Choose units: [M]etric (kg) or [I]mperial (lbs)? ",
+                    "blue",
+                    bold=True,
+                )
+            )
+            .strip()
+            .lower()
         )
         if unit not in ("m", "i"):
-            print("Please enter 'M' for Metric or 'I' for Imperial.")
+            print(
+                colorize(
+                    "Please enter 'M' for Metric or 'I' for Imperial.",
+                    "red",
+                    bold=True,
+                )
+            )
             return None
-        age = int(input("Enter your age (years): ").strip())
+        age = int(
+            input(
+                colorize(
+                    "Enter your age (years): ",
+                    "yellow",
+                    bold=True,
+                )
+            ).strip()
+        )
         if unit == "m":
-            weight = float(input("Enter your weight (kg): ").strip())
+            weight = float(
+                input(
+                    colorize("Enter your weight (kg): ", "magenta", bold=True)
+                ).strip()
+            )
         else:
-            weight = float(input("Enter your weight (lbs): ").strip())
+            weight = float(
+                input(
+                    colorize("Enter your weight (lbs): ", "magenta", bold=True)
+                ).strip()
+            )
             weight = weight * 0.453592  # Convert lbs to kg
-        gender = input("Enter your gender (male/female): ").strip().lower()
-        if gender not in ["male", "female"]:
-            print("Gender must be 'male' or 'female'.")
+        gender = (
+            input(
+                colorize(
+                    "Enter your gender ([M]ale/[F]emale): ",
+                    "cyan",
+                    bold=True,
+                )
+            )
+            .strip()
+            .lower()
+        )
+        if gender in ["m", "male"]:
+            gender = "male"
+        elif gender in ["f", "female"]:
+            gender = "female"
+        else:
+            print(
+                colorize(
+                    "Gender must be 'M'/'F' or 'male'/'female'.",
+                    "red",
+                    bold=True,
+                )
+            )
             return None
         # Session time
         time_str = input(
-            "Enter session start time (HH:MM, 24h, default 07:00): "
+            colorize(
+                "Enter session start time (HH:MM, 24h, default 07:00): ",
+                "blue",
+                bold=True,
+            )
         ).strip()
         if time_str:
             try:
                 hour, minute = map(int, time_str.split(":"))
             except Exception:
-                print("Invalid time format. Use HH:MM (24h).")
+                print(
+                    colorize(
+                        "Invalid time format. Use HH:MM (24h).",
+                        "red",
+                        bold=True,
+                    )
+                )
                 return None
         else:
             hour, minute = 7, 0
         # Language/localization
         lang = (
-            input("Choose language: [E]nglish (default) or [S]panish: ").strip().lower()
+            input(
+                colorize(
+                    "Choose language: [E]nglish (default) or [S]panish: ",
+                    "green",
+                    bold=True,
+                )
+            )
+            .strip()
+            .lower()
         )
         if lang not in ("e", "s", ""):
-            print("Please enter 'E' for English or 'S' for Spanish.")
+            print(
+                colorize(
+                    "Please enter 'E' for English or 'S' for Spanish.",
+                    "red",
+                    bold=True,
+                )
+            )
             return None
         lang = lang if lang else "e"
         # Export option
         export = (
             input(
-                "Export format: [I]CS (default), [C]SV, [J]SON, [G]oogle Fit CSV, [P]DF, [M]arkdown, [V]oice, [S]trava/Runkeeper? "
+                colorize(
+                    "Export format: [I]CS (default), [C]SV, [J]SON, [G]oogle Fit CSV, [P]DF, [M]arkdown, [V]oice, [S]trava/Runkeeper? ",
+                    "yellow",
+                    bold=True,
+                )
             )
             .strip()
             .lower()
         )
         if export not in ("i", "c", "j", "g", "p", "m", "v", "s", ""):
-            print("Please enter a valid export option.")
+            print(colorize("Please enter a valid export option.", "red", bold=True))
             return None
         export = export if export else "i"
         # Personal goal
-        goal = input("Enter your personal C25K goal (optional): ").strip()
+        goal = input(
+            colorize("Enter your personal C25K goal (optional): ", "magenta", bold=True)
+        ).strip()
         # Advanced: plan length
         weeks, days_per_week = plan_customization.get_custom_plan_length()
         # Advanced: accessibility
         high_contrast = (
-            input("High-contrast mode? [Y/N] (default N): ").strip().lower() == "y"
+            input(
+                colorize("High-contrast mode? [Y/N] (default N): ", "white", bold=True)
+            )
+            .strip()
+            .lower()
+            == "y"
         )
         large_font = (
-            input("Large font mode? [Y/N] (default N): ").strip().lower() == "y"
+            input(colorize("Large font mode? [Y/N] (default N): ", "white", bold=True))
+            .strip()
+            .lower()
+            == "y"
         )
         # Advanced: dynamic start date
         start_option = (
-            input("Start date: [D]efault, [N]ext Monday, or YYYY-MM-DD? ")
+            input(
+                colorize(
+                    "Start date: [D]efault, [N]ext Monday, or YYYY-MM-DD? ",
+                    "blue",
+                    bold=True,
+                )
+            )
             .strip()
             .lower()
         )
@@ -115,21 +285,33 @@ def get_user_info() -> Optional[Dict[str, Any]]:
 
                 start_day = datetime.strptime(start_option, "%Y-%m-%d")
             except Exception:
-                print("Invalid date format. Use YYYY-MM-DD.")
+                print(
+                    colorize("Invalid date format. Use YYYY-MM-DD.", "red", bold=True)
+                )
                 return None
         else:
             start_day = None  # Use default in main
         # Advanced: email for reminders
-        email = input("Enter your email for reminders (optional): ").strip()
+        email = input(
+            colorize("Enter your email for reminders (optional): ", "green", bold=True)
+        ).strip()
         # Advanced: location for weather
         location = input(
-            "Enter your city or ZIP for weather suggestions (optional): "
+            colorize(
+                "Enter your city or ZIP for weather suggestions (optional): ",
+                "cyan",
+                bold=True,
+            )
         ).strip()
         # Custom alert time for ICS
         alert_minutes = None
         if export == "i":
             alert_input = input(
-                "Alert before session (minutes, default 30, 0=none): "
+                colorize(
+                    "Alert before session (minutes, default 30, 0=none): ",
+                    "magenta",
+                    bold=True,
+                )
             ).strip()
             if alert_input == "":
                 alert_minutes = 30
@@ -137,9 +319,16 @@ def get_user_info() -> Optional[Dict[str, Any]]:
                 try:
                     alert_minutes = int(alert_input)
                 except Exception:
-                    print("Invalid alert time. Using default 30 minutes.")
+                    print(
+                        colorize(
+                            "Invalid alert time. Using default 30 minutes.",
+                            "red",
+                            bold=True,
+                        )
+                    )
                     alert_minutes = 30
         return {
+            "name": name,
             "age": age,
             "weight": weight,
             "gender": gender,
@@ -310,6 +499,7 @@ def generate_ics(
     hour: int,
     minute: int,
     alert_minutes: int = 30,
+    outdir: str = ".",
 ) -> None:
     """
     Generate the ICS file from the workout plan and start date.
@@ -347,9 +537,10 @@ def generate_ics(
             )
         ics_content += "END:VEVENT\n"
     ics_content += "END:VCALENDAR"
-    with open("Couch_to_5K_Reminders.ics", "w", encoding="utf-8") as f:
+    filename = os.path.join(outdir, "Couch_to_5K_Reminders.ics")
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(ics_content)
-    print("ICS file 'Couch_to_5K_Reminders.ics' created successfully.")
+    print(f"ICS file '{filename}' created successfully.")
 
 
 def export_csv(plan: List[Dict[str, Any]], filename: str) -> None:
@@ -393,7 +584,7 @@ def export_markdown_checklist(
     plan: List[Dict[str, Any]], filename: str, user: Dict[str, Any]
 ) -> None:
     """Export the workout plan as a Markdown checklist file with tips and goal, with accessibility options if selected."""
-    content = "# Couch to 5K Checklist\n\n"
+    content = f"# Couch to 5K Checklist\n\n**Name:** {user['name']}\n\n**Age:** {user['age']}\n\n**Start Date:** {user['start_day'].strftime('%Y-%m-%d') if user.get('start_day') else 'default'}\n\n"
     if user.get("goal"):
         content += f"**Personal Goal:** {user['goal']}\n\n"
     content += "**Resource:** [C25K Guide](https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/)\n\n"
@@ -401,10 +592,10 @@ def export_markdown_checklist(
         if session["duration"] > 0:
             content += (
                 f"- [ ] Week {session['week']} Day {session['day']}: "
-                f"{session['workout']}\n  - Tip: {session['tip']}\n  - Notes: _______\n"
+                f"{session['workout']}\n  - Tip: {session['tip']}\n  - Notes: ________________________________\n    ________________________________\n    ________________________________\n"
             )
         else:
-            content += f"- [ ] Week {session['week']} {session['day']}: Rest Day\n  - Tip: {session['tip']}\n  - Notes: _______\n"
+            content += f"- [ ] Week {session['week']} {session['day']}: Rest Day\n  - Tip: {session['tip']}\n  - Notes: ________________________________\n    ________________________________\n    ________________________________\n"
     # Apply accessibility options if selected
     if user.get("high_contrast") or user.get("large_font"):
         content = accessibility.apply_accessibility_options(
@@ -415,23 +606,48 @@ def export_markdown_checklist(
     print(f"Markdown checklist '{filename}' created successfully.")
 
 
+def get_output_dir(user):
+    # Use YYYY-MM-DD for start date
+    start_str = (
+        user["start_day"].strftime("%Y-%m-%d") if user.get("start_day") else "default"
+    )
+    safe_name = user["name"].replace(" ", "_")
+    outdir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "created",
+        f"{safe_name}-{user['age']}-{start_str}",
+    )
+    os.makedirs(outdir, exist_ok=True)
+    return outdir
+
+
 def main() -> None:
     """
     Main execution block for the Couch to 5K ICS Generator.
     """
-    print("Couch to 5K ICS Generator (for users with hypertension)")
     print(
-        "====================================================================",
-        "\nDISCLAIMER: This script is for informational purposes only and is not a\n",
-        "substitute for professional medical advice, diagnosis, or treatment.\n",
-        "Always consult your healthcare provider before starting any new\n",
-        "exercise program, especially if you have hypertension or other\n",
-        "pre-existing health conditions. Use this script at your own risk.\n",
-        "The author assumes no responsibility for any injury or health issues\n",
-        "that may result from using this script.\n",
-        "====================================================================",
-        sep="",
+        colorize(
+            "Couch to 5K ICS Generator (for users with hypertension)",
+            "magenta",
+            bold=True,
+        )
     )
+    print(colorize("=" * 68, "yellow", bold=True))
+    print(
+        colorize(
+            "\nDISCLAIMER: This script is for informational purposes only and is not a\n"
+            "substitute for professional medical advice, diagnosis, or treatment.\n"
+            "Always consult your healthcare provider before starting any new\n"
+            "exercise program, especially if you have hypertension or other\n"
+            "pre-existing health conditions. Use this script at your own risk.\n"
+            "The author assumes no responsibility for any injury or health issues\n"
+            "that may result from using this script.\n",
+            "red",
+            bold=True,
+        )
+    )
+    print(colorize("=" * 68, "yellow", bold=True))
     user = get_user_info()
     if not user:
         print(
@@ -440,20 +656,32 @@ def main() -> None:
         )
         return
     # Show summary before generating
-    print("\nYour C25K Plan Summary:")
-    print(f"  Weeks: {user['weeks']}  Days/Week: {user['days_per_week']}")
-    print(f"  Start time: {user['hour']:02d}:{user['minute']:02d}")
-    print(f"  Export format: {user['export'].upper()}")
+    print(colorize("\nYour C25K Plan Summary:", "cyan", bold=True))
+    print(
+        colorize(
+            f"  Weeks: {user['weeks']}  Days/Week: {user['days_per_week']}",
+            "green",
+            bold=True,
+        )
+    )
+    print(
+        colorize(
+            f"  Start time: {user['hour']:02d}:{user['minute']:02d}",
+            "yellow",
+            bold=True,
+        )
+    )
+    print(colorize(f"  Export format: {user['export'].upper()}", "magenta", bold=True))
     if user.get("start_day"):
-        print(f"  Start date: {user['start_day']}")
+        print(colorize(f"  Start date: {user['start_day']}", "blue", bold=True))
     if user.get("goal"):
-        print(f"  Goal: {user['goal']}")
+        print(colorize(f"  Goal: {user['goal']}", "green", bold=True))
     if user.get("high_contrast") or user.get("large_font"):
-        print("  Accessibility: ", end="")
+        print(colorize("  Accessibility: ", "white", bold=True), end="")
         if user["high_contrast"]:
-            print("High-contrast ", end="")
+            print(colorize("High-contrast ", "yellow", bold=True), end="")
         if user["large_font"]:
-            print("Large font", end="")
+            print(colorize("Large font", "yellow", bold=True), end="")
         print()
     # Plan customization
     plan = get_workout_plan(user)
@@ -464,31 +692,50 @@ def main() -> None:
         from datetime import datetime
 
         start_day = datetime(2025, 7, 15)  # Default
+    user["start_day"] = start_day  # Ensure always set
+    outdir = get_output_dir(user)
     # Weather suggestion (example for first workout)
     if user.get("location"):
         suggestion = weather.get_weather_suggestion(user["location"], str(start_day))
-        print(f"Weather suggestion for your first workout: {suggestion}")
+        print(
+            colorize(
+                f"Weather suggestion for your first workout: {suggestion}",
+                "cyan",
+                bold=True,
+            )
+        )
     # Export logic
     if user["export"] == "i":
         generate_ics(
-            plan, start_day, user["hour"], user["minute"], user.get("alert_minutes", 30)
+            plan,
+            start_day,
+            user["hour"],
+            user["minute"],
+            user.get("alert_minutes", 30),
+            outdir=outdir,
         )
     elif user["export"] == "c":
-        export_csv(plan, "Couch_to_5K_Reminders.csv")
+        export_csv(plan, os.path.join(outdir, "Couch_to_5K_Reminders.csv"))
     elif user["export"] == "j":
-        export_json(plan, "Couch_to_5K_Reminders.json")
+        export_json(plan, os.path.join(outdir, "Couch_to_5K_Reminders.json"))
     elif user["export"] == "g":
-        export_google_fit_csv(plan, "Couch_to_5K_GoogleFit.csv")
+        export_google_fit_csv(plan, os.path.join(outdir, "Couch_to_5K_GoogleFit.csv"))
     elif user["export"] == "p":
-        pdf_export.export_to_pdf(str(plan), "Couch_to_5K_Plan.pdf")
+        pdf_export.export_to_pdf(
+            str(plan), os.path.join(outdir, "Couch_to_5K_Plan.pdf")
+        )
     elif user["export"] == "m":
-        export_markdown_checklist(plan, "Couch_to_5K_Checklist.md", user)
+        export_markdown_checklist(
+            plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
+        )
     elif user["export"] == "v":
         voice_prompts.export_voice_prompts(plan, user["lang"])
     elif user["export"] == "s":
         mobile_export.export_to_mobile_app(plan, "Strava/Runkeeper")
     # Always output a Markdown checklist with user info
-    export_markdown_checklist(plan, "Couch_to_5K_Checklist.md", user)
+    export_markdown_checklist(
+        plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
+    )
     # Accessibility (example: print message)
     if user["high_contrast"] or user["large_font"]:
         print("Accessibility options enabled: ", end="")
@@ -506,7 +753,13 @@ def main() -> None:
     # Progress tracking (stub)
     progress_data = progress.import_progress("progress.csv")
     print(progress.generate_progress_summary(progress_data))
-    print("\nAll done! Your personalized C25K plan and exports are ready. Good luck!")
+    print(
+        colorize(
+            "\nAll done! Your personalized C25K plan and exports are ready. Good luck!",
+            "green",
+            bold=True,
+        )
+    )
 
 
 if __name__ == "__main__":
