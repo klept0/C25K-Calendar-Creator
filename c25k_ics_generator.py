@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Couch to 5K ICS Generator
 
