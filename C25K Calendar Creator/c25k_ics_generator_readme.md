@@ -2,7 +2,7 @@
 
 **DISCLAIMER: This script is for informational purposes only and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider before starting any new exercise program, especially if you have hypertension or other pre-existing health conditions. Use this script at your own risk. The author assumes no responsibility for any injury or health issues that may result from using this script.**
 
-This script generates a personalized Couch to 5K calendar (.ics) file, tailored for users with hypertension. It customizes the workout plan based on your age, weight, gender, preferred language, session start time, and personal goal. The script supports multiple export formats for use with Apple/Google calendars, Google Fit, and other platforms. It also generates a Markdown checklist for tracking progress.
+This script generates a personalized Couch to 5K calendar (.ics) file, tailored for users with hypertension. It customizes the workout plan based on your age, weight, gender, preferred language, session start time, and personal goal. The script supports multiple export formats for use with Apple/Google calendars, Google Fit, and other platforms. It also generates a Markdown checklist and an advanced Excel progress tracker for tracking progress.
 
 ## Features
 
@@ -16,12 +16,28 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
   - `.json` (data import for other apps)
   - Google Fit compatible `.csv`
   - Markdown checklist for tracking
+  - **Excel progress tracker** with advanced macros and visual cues
 - **Hydration and Safety Reminders:** Each workout includes hydration and safety notes.
 - **Beginner Tips:** Each day includes a motivational or safety tip (based on NHS, CDC, and AHA guidance).
 - **Rest Days:** Rest days are included in all exports and the checklist.
 - **Personal Goal:** Option to set a personal goal, included in the checklist.
 - **Resource Link:** Checklist includes a link to a reputable C25K guide.
 - **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
+- **Advanced Excel Progress Tracker:** Automatically generated with all macros, formulas, and visual cues. Macros and instructions are included in a dedicated sheet. Formatting is optimized for readability and accessibility.
+
+## Defaults
+
+- **Units:** Imperial (lbs, °F) unless Metric is selected
+- **Session Start Time:** 07:00 (7:00 AM)
+- **Language:** English
+- **Plan Length:** 10 weeks, 3 days per week
+- **Start Date:** July 15, 2025 (if not specified)
+- **Alert Time (ICS):** 30 minutes before session
+- **Accessibility:** Off (can enable high-contrast or large font)
+- **Personal Goal:** Optional (blank by default)
+- **Weather:** Fahrenheit (°F) for all weather integration
+- **Output Directory:** `created/<name>-<age>-<start_date>/`
+- **Progress Tracker:** Excel file auto-generated and macros auto-inserted
 
 ## Usage
 
@@ -39,13 +55,13 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
      - Gender
      - Session start time (24h format, e.g., 07:00)
      - Language (English or Spanish)
-     - Export format (ICS, CSV, JSON, Google Fit CSV)
+     - Export format (ICS, CSV, JSON, Google Fit CSV, Excel, Markdown)
      - **Alert time before session (minutes, for ICS export only)**
      - Personal goal (optional)
    - If any information is missing or invalid, the script will not generate the calendar.
 3. **Import the Calendar or Data:**
-   - Locate the generated file (e.g., `Couch_to_5K_Reminders.ics`, `.csv`, `.json`, `Couch_to_5K_GoogleFit.csv`, or `Couch_to_5K_Checklist.md`).
-   - Import it into your preferred calendar, health application, or use the checklist for tracking.
+   - Locate the generated file (e.g., `Couch_to_5K_Reminders.ics`, `.csv`, `.json`, `Couch_to_5K_GoogleFit.csv`, `Couch_to_5K_Checklist.md`, or your Excel tracker).
+   - Import it into your preferred calendar, health application, or use the checklist/tracker for progress.
 
 ## Example
 
@@ -59,60 +75,39 @@ start_day = datetime(2025, 7, 15)
 
 - **Session Time:** Enter your preferred session time at the prompt.
 - **Language:** Choose English or Spanish for all workout instructions.
-- **Export Format:** Choose the format that best fits your needs (ICS, CSV, JSON, Google Fit CSV, Markdown).
+- **Export Format:** Choose the format that best fits your needs (ICS, CSV, JSON, Google Fit CSV, Markdown, Excel).
 - **Workout Duration:** The script automatically reduces session duration for users aged 60+ or weighing 100kg+.
 - **Personal Goal:** Enter a goal to keep yourself motivated.
+- **Plan Length:** Choose number of weeks and days per week for your plan.
+- **Accessibility:** Enable high-contrast or large-font options for Markdown and Excel outputs.
 
 ## Advanced Features
 
-- **Plan Customization:** Choose number of weeks and days per week for your plan.
-- **Accessibility:** High-contrast and large-font options for Markdown checklist.
 - **Dynamic Start Date:** Start on a specific date or next Monday.
 - **Reminders:** Optionally send an email reminder for your first workout (stub).
 - **Weather Suggestions:** Get a weather suggestion for your first workout (stub).
-- **Progress Tracking:** Import and summarize progress from a CSV (stub).
+- **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
 - **Mobile App Export:** Export to Strava/Runkeeper (stub).
 - **PDF Export:** Export plan as a PDF (stub).
 - **Voice Prompts:** Export voice/text prompts for workouts (stub).
 - **Community/Sharing:** Share your plan via email (stub).
-- **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
 
 ### Usage Notes
 
 - All advanced features are optional and can be accessed via prompts when running the script.
 - Stubs indicate features that can be extended with real integrations.
 
-## Progress Tracking Macros
+## Excel Progress Tracker & Macros
 
-The `progress.csv` file includes built-in spreadsheet macros to help you track your Couch to 5K journey:
+The Excel progress tracker (`<name>_progress_tracker.xlsx`) is automatically generated in your output folder. It includes:
 
-- **Auto-fill Today’s Date:** Use `=TODAY()` in the `date_completed` column.
-- **Total Completed Sessions:** `=COUNTIF(D2:D31,"Y")`
-- **Progress Percentage:** `=COUNTIF(D2:D31,"Y")/COUNTA(D2:D31)`
-- **Next Session to Complete:** `=MATCH("",D2:D31,0)+1`
-- **Days Since Last Session:** `=TODAY()-MAX(C2:C31)`
-- **Motivational Message:** `=IF(COUNTIF(D2:D31,"Y")=COUNTA(D2:D31),"Congratulations! You finished!","Keep going, you're doing great!")`
+- **Macros & Instructions Sheet:** All advanced macros, formulas, and usage instructions are included in a dedicated sheet. You can copy-paste or review them directly in Excel.
+- **Auto-Insertion:** Macros and formulas are auto-inserted using the included `c25k_excel_macro_inserter.py` script. You can run this script manually if needed.
+- **Advanced Visual Cues:** The tracker includes checkmarks, rest day highlighting, overdue alerts, sparklines, milestone badges, weekly progress bars, goal gauge, weather icons/colors, accessibility macro, and notes highlighting.
+- **Improved Formatting:** Columns are auto-sized, all cells are wrapped and aligned, code blocks use a monospaced font and shading, and the top row is frozen for easy navigation.
+- **Accessibility:** High-contrast and large-font options are available for improved readability.
 
-These macros work in Excel, Google Sheets, and most spreadsheet programs. See the comments in `progress.csv` for more details.
-
-## Advanced Macros in Progress Tracker (Automated Columns)
-
-The following advanced macros are now included as columns in `progress.csv`:
-
-- **Current_Streak**: Tracks the current streak of completed sessions. Use `=IF(D2="Y",1,0)` in F2, then `=IF(D3="Y",F2+1,0)` down the column. Longest streak: `=MAX(F2:F31)`.
-- **Missed**: Flags missed sessions. Use `=IF(AND(C2="",TODAY()-DATE(2025,7,15)+(ROW()-2)*2>2),"Missed","")` in G2.
-- **Adjust_Plan**: Suggests plan adjustment if 3+ sessions are missed. Use `=IF(COUNTIF($D$2:$D$31,"N")>=3,"Consider repeating this week or shifting plan","On Track")` in H2.
-- **Effort**: User rates each session (1-5 or Easy/Medium/Hard). Add conditional formatting for trends.
-- **Milestone**: Celebrates milestones. Use `=IF(AND(A2=1,B2=3),"First week done!",IF(AND(A2=5,B2=3),"Halfway!",IF(AND(A2=10,B2=3),"C25K Complete!","")))` in J2.
-- **Weather**: User logs weather/conditions for each session.
-
-Other macros:
-
-- **Goal Progress Visualization**: `=COUNTIF(D2:D31,"Y")/COUNTA(D2:D31)`
-- **Weekly Summary**: Insert a row after each week and use `=COUNTIF(D2:D4,"Y")` for completed, `=COUNTIF(G2:G4,"Missed")` for missed, and a motivational message formula.
-- **Auto-Backup/Versioning**: Use File > Version history (Google Sheets) or a VBA macro (Excel).
-
-All formulas/macros are beginner-friendly and can be copy-pasted or are pre-filled in the CSV. See the tool and repo README for more details.
+**Note:** The old CSV-based macros are no longer used. All macros and formulas are now in the Excel file.
 
 ## Medical Sources and References
 
