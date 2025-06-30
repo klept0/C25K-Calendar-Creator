@@ -20,6 +20,8 @@ Random Things I Have Made - random ideas that may not be 100%
 - **Dynamic Start Date:** Start on a specific date or next Monday.
 - **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
 - **Motivational Quotes, Adaptive Plan, Custom Rest Days, Dashboard, Badges, Reminders, Weekly Review Prompts:** All included in the Excel tracker.
+- **Reminders:** Real email reminders for each session are now supported. Configure your SMTP server at the prompt or via environment variables. See the tool README for setup instructions.
+- **Mobile App Export:** Real Strava/Runkeeper export is now supported. Enter your API token at the prompt to upload your plan. See the tool README for setup instructions.
 - **Output Directory Logic:** All exports are saved in a user-specific folder inside the project.
 - **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel.
 - **Markdown Checklist Export:** Always generated with user info and notes.
@@ -30,9 +32,7 @@ Random Things I Have Made - random ideas that may not be 100%
 <details>
 <summary>Planned / Placeholder / Stub Features</summary>
 
-- **Reminders:** Email reminders are stubbed (no real email sending).
 - **Weather Suggestions:** Weather integration is a stub (no real API call).
-- **Mobile App Export:** Strava/Runkeeper and other mobile app exports are stubs.
 - **Apple Health Export:** Documented as planned only.
 - **QR Code Export:** Documented as planned only.
 - **PDF Export:** PDF export is a stub (calls a module, may not be fully implemented).
@@ -86,4 +86,18 @@ All medical and health-related logic in this script is for informational purpose
 
 The tool defaults to imperial units and Fahrenheit for weather. You can change these in the prompts or settings.
 
-</details>
+## Weather Integration (OpenWeatherMap)
+
+This tool can fetch real weather forecasts for your session dates if you provide a city or ZIP code. To enable this feature:
+
+1. Sign up for a free API key at [OpenWeatherMap](https://openweathermap.org/api).
+2. Set your API key as an environment variable before running the script:
+
+   ```sh
+   export OWM_API_KEY=your_openweathermap_api_key
+   ```
+   Or, replace the placeholder in the code with your API key.
+
+3. If no API key is set, the tool will use a built-in weather stub for demo purposes.
+
+See the code and documentation for more details.

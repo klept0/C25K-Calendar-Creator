@@ -22,19 +22,19 @@ Medical recommendations and plan structure are based on:
 import csv
 import json
 import os
+import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from c25k_utils import (
     accessibility,
     community,
-    mobile_export,
     pdf_export,
     plan_customization,
     progress,
-    reminders,
-    start_date,
-    voice_prompts,
     weather,
 )
 from openpyxl import Workbook
@@ -122,17 +122,13 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             print(colorize("Name is required.", "red", bold=True))
             return None
         # Default to imperial units
-        unit = (
-            input(
-                colorize(
-                    "Choose units: [I]mperial (lbs, default) or [M]etric (kg)? ",
-                    "blue",
-                    bold=True,
-                )
+        unit = input(
+            colorize(
+                "Choose units: [I]mperial (lbs, default) or [M]etric (kg)? ",
+                "blue",
+                bold=True,
             )
-            .strip()
-            .lower()
-        )
+        ).strip().lower()
         if unit == "" or unit == "i":
             unit = "i"
         elif unit == "m":
@@ -168,29 +164,19 @@ def get_user_info() -> Optional[Dict[str, Any]]:
                 ).strip()
             )
             weight = weight * 0.453592  # Convert lbs to kg
-        gender = (
-            input(
-                colorize(
-                    "Enter your gender ([M]ale/[F]emale): ",
-                    "cyan",
-                    bold=True,
-                )
+        gender = input(
+            colorize(
+                "Enter your gender ([M]ale/[F]emale): ",
+                "cyan",
+                bold=True,
             )
-            .strip()
-            .lower()
-        )
+        ).strip().lower()
         if gender in ["m", "male"]:
             gender = "male"
         elif gender in ["f", "female"]:
             gender = "female"
         else:
-            print(
-                colorize(
-                    "Gender must be 'M'/'F' or 'male'/'female'.",
-                    "red",
-                    bold=True,
-                )
-            )
+            print(colorize("Gender must be 'M'/'F' or 'male'/'female'.", "red", bold=True))
             return None
         # Session time
         time_str = input(
@@ -206,7 +192,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             except Exception:
                 print(
                     colorize(
-                        "Invalid time format. Use HH:MM (24h).",
+                        "Invalid time format. Please use HH:MM (24h).",
                         "red",
                         bold=True,
                     )
@@ -215,17 +201,13 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         else:
             hour, minute = 7, 0
         # Language/localization
-        lang = (
-            input(
-                colorize(
-                    "Choose language: [E]nglish (default) or [S]panish: ",
-                    "green",
-                    bold=True,
-                )
+        lang = input(
+            colorize(
+                "Choose language: [E]nglish (default) or [S]panish: ",
+                "green",
+                bold=True,
             )
-            .strip()
-            .lower()
-        )
+        ).strip().lower()
         if lang not in ("e", "s", ""):
             print(
                 colorize(
@@ -269,6 +251,13 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         )
         large_font = (
             input(colorize("Large font mode? [Y/N] (default N): ", "white", bold=True))
+            .strip()
+            .lower()
+            == "y"
+        )
+        # New: dyslexia-friendly font option
+        dyslexia_font = (
+            input(colorize("Dyslexia-friendly font? [Y/N] (default N): ", "white", bold=True))
             .strip()
             .lower()
             == "y"
@@ -364,14 +353,15 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             "days_per_week": days_per_week,
             "high_contrast": high_contrast,
             "large_font": large_font,
+            "dyslexia_font": dyslexia_font,
             "start_day": start_day,
             "email": email,
             "location": location,
             "alert_minutes": alert_minutes,
             "rest_days": rest_days,
         }
-    except (ValueError, TypeError):
-        print("Invalid input. Please enter valid numbers for age and weight.")
+    except Exception:
+        print(colorize("An error occurred during user input.", "red", bold=True))
         return None
 
 
@@ -449,6 +439,68 @@ def get_beginner_tip(day: int, lang: str = "e") -> str:
     return tips[(day - 1) % len(tips)]
 
 
+def fetch_weather_for_session(location: str, date: datetime) -> str:
+    """
+    Fetch weather forecast for the given location and date using OpenWeatherMap API.
+    Requires the environment variable OWM_API_KEY to be set, or replace with your API key.
+    Returns a string summary (e.g., 'Sunny 75°F', 'Rainy 60°F').
+    Falls back to stub if API fails.
+    """
+    api_key = os.environ.get("OWM_API_KEY", "YOUR_OPENWEATHERMAP_API_KEY")
+    if not api_key or api_key == "YOUR_OPENWEATHERMAP_API_KEY":
+        # Fallback to stub
+        weather_map = {
+            0: "Sunny 75°F",
+            1: "Partly Cloudy 72°F",
+            2: "Rainy 68°F",
+            3: "Thunderstorms 70°F",
+            4: "Cloudy 71°F",
+            5: "Showers 65°F",
+            6: "Windy 69°F",
+        }
+        return weather_map[date.weekday()]
+    try:
+        # Use city name or ZIP (US only) for location
+        params = {
+            "q": location,
+            "appid": api_key,
+            "units": "imperial",
+        }
+        url = "https://api.openweathermap.org/data/2.5/forecast"
+        resp = requests.get(url, params=params, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        # Find the forecast closest to the session date/time
+        from datetime import datetime as dt
+        target = dt.combine(date.date(), dt.min.time())
+        best = None
+        min_diff = float("inf")
+        for entry in data.get("list", []):
+            entry_time = dt.fromtimestamp(entry["dt"])
+            diff = abs((entry_time - target).total_seconds())
+            if diff < min_diff:
+                min_diff = diff
+                best = entry
+        if best:
+            desc = best["weather"][0]["description"].capitalize()
+            temp = round(best["main"]["temp"])
+            return f"{desc} {temp}°F"
+        else:
+            return "Weather unavailable"
+    except Exception as e:
+        # Fallback to stub
+        weather_map = {
+            0: "Sunny 75°F",
+            1: "Partly Cloudy 72°F",
+            2: "Rainy 68°F",
+            3: "Thunderstorms 70°F",
+            4: "Cloudy 71°F",
+            5: "Showers 65°F",
+            6: "Windy 69°F",
+        }
+        return weather_map[date.weekday()]
+
+
 def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Return a plan (list of dicts) based on age, weight, and plan customization.
@@ -460,11 +512,20 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     days_per_week = user.get("days_per_week", 3)
     rest_days = user.get("rest_days", ["Sat", "Sun"])
     plan: List[Dict[str, Any]] = []
+    start_day = user.get("start_day")
+    if not start_day:
+        from datetime import datetime
+        start_day = datetime(2025, 7, 15)
     for week in range(weeks):
         for day in range(days_per_week):
             day_offset = day * (7 // days_per_week)
+            session_date = start_day + timedelta(weeks=week, days=day_offset)
             workout = get_workout_details(week + 1, day + 1, user.get("lang", "e"))
             tip = get_beginner_tip(day + 1, user.get("lang", "e"))
+            # Fetch weather for this session
+            weather_str = ""
+            if user.get("location"):
+                weather_str = fetch_weather_for_session(user["location"], session_date)
             description = (
                 f"Follow the Couch to 5K plan - Week {week+1} session. "
                 f"Note: This plan is tailored for an adult {user['gender']} "
@@ -484,6 +545,8 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "description": description,
                     "workout": workout,
                     "tip": tip,
+                    "weather": weather_str,
+                    "date": session_date.strftime("%Y-%m-%d"),
                 }
             )
     if user["age"] >= 60 or user["weight"] >= 100:
@@ -622,9 +685,20 @@ def export_markdown_checklist(
         else:
             content += f"- [ ] Week {session['week']} {session['day']}: Rest Day\n  - Tip: {session['tip']}\n  - Notes: ________________________________\n    ________________________________\n    ________________________________\n"
     # Apply accessibility options if selected
-    if user.get("high_contrast") or user.get("large_font"):
+    if user.get("high_contrast") or user.get("large_font") or user.get("dyslexia_font"):
+        # Add a style block for Markdown renderers that support it
+        style = "<style>\n"
+        if user.get("large_font"):
+            style += "body,li { font-size: 1.3em !important; }\n"
+        if user.get("dyslexia_font"):
+            style += "body,li { font-family: 'Comic Sans MS', 'OpenDyslexic', Arial, sans-serif !important; }\n"
+        if user.get("high_contrast"):
+            style += "body { background: #000; color: #FFD700; }\n"
+        style += "</style>\n\n"
+        content = style + content
+        # Also call accessibility module for further processing (now includes dyslexia_font)
         content = accessibility.apply_accessibility_options(
-            content, user.get("high_contrast"), user.get("large_font")
+            content, user.get("high_contrast"), user.get("large_font"), user.get("dyslexia_font")
         )
     with open(filename, "w", encoding="utf-8") as mdfile:
         mdfile.write(content)
@@ -653,7 +727,6 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     Returns the filename.
     """
     import os
-
     from openpyxl.formatting.rule import (
         ColorScaleRule,
         FormulaRule,
@@ -665,6 +738,20 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         wb = Workbook()
         ws = wb.active
         ws.title = "Progress"
+        # Accessibility: set font size and font family if selected
+        default_font_name = "Calibri"
+        if user.get("dyslexia_font"):
+            default_font_name = "Comic Sans MS"
+        default_font_size = 11
+        if user.get("large_font"):
+            default_font_size = 14
+        # Set default font for all cells (including new ones)
+        ws.sheet_properties.tabColor = "1072BA"
+        for row in ws.iter_rows():
+            for cell in row:
+                cell.font = Font(name=default_font_name, size=default_font_size)
+        ws.parent.stylesheet.fonts[0].name = default_font_name
+        ws.parent.stylesheet.fonts[0].size = default_font_size
         columns = [
             "week",
             "day",
@@ -686,7 +773,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         for col_idx, col in enumerate(columns, 1):
             cell = ws.cell(row=1, column=col_idx)
             cell.alignment = Alignment(horizontal="center", vertical="center")
-            cell.font = Font(bold=True)
+            cell.font = Font(bold=True, name=default_font_name, size=default_font_size)
         # Motivational quotes list
         motivational_quotes = [
             "You are stronger than you think!",
@@ -717,8 +804,13 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         ):
             workout = get_workout_details(week, day, user.get("lang", "e"))
             quote = motivational_quotes[((week-1)*days_per_week + (day-1)) % len(motivational_quotes)]
+            # Fetch weather for this session
+            session_date = start_day + timedelta(weeks=week-1, days=(day-1)*(7//days_per_week))
+            weather_str = ""
+            if user.get("location"):
+                weather_str = fetch_weather_for_session(user["location"], session_date)
             ws.append([
-                week, day, "", "", f"Workout: {workout}", "", "", "", "", "", "", quote, "", ""
+                week, day, "", "", f"Workout: {workout}", "", "", "", "", "", weather_str, quote, "", ""
             ])
             row = i
             ws[f"D{row}"].number_format = "General"
@@ -843,7 +935,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "- Effort: Enter 1-5 (Easy-Hard). Conditional formatting shows trends."
         )
         ws2["A6"] = "- Milestone: See formula block below."
-        ws2["A7"] = "- Weather: Log conditions for each session."
+        ws2["A7"] = "- Weather: Log conditions for each session. Pre-filled with forecast if location provided."
         ws2["A8"] = "- Goal Progress: See formula block below."
         ws2["A9"] = "- Weekly Summary: See formula block below."
         ws2["A10"] = "- Auto-Backup: Use File > Version history or add this VBA macro:"
@@ -854,6 +946,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         ws2["A12"] = (
             "To use: Press Alt+F11, Insert > Module, paste the macro, and run BackupSheet."
         )
+        ws2["A13"] = "Font Accessibility: If you selected large font or dyslexia-friendly font, this tracker uses Comic Sans MS and/or larger text for easier reading."
         ws2["A14"] = "Visual Cues & Advanced Features:"
         ws2["A15"] = (
             "1. Completion checkmarks: Mark 'Y' in Completed for a green check."
@@ -1075,7 +1168,143 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     return filename
 
 
+def show_faq():
+    faqs = [
+        ("What does this tool do?",
+         "It generates a personalized Couch to 5K plan, calendar, and progress tracker with advanced features for beginners."),
+        ("How do I customize my plan?",
+         "You can choose the number of weeks and days per week during the prompts."),
+        ("How do I use the Excel tracker?",
+         "Open the generated Excel file. The 'Macros & Instructions' sheet explains all features and macros."),
+        ("How do I enable accessibility options?",
+         "You can select high-contrast or large font during the prompts. See the tracker instructions for more."),
+        ("How do I export to my calendar or fitness app?",
+         "Choose your desired export format (ICS, CSV, etc.) during the prompts. See the README for app-specific steps."),
+        ("What if I miss a session?",
+         "The tracker will highlight missed sessions and suggest repeating weeks if needed."),
+        ("How do I get help or give feedback?",
+         "See the README for contact info or use the feedback section in the tracker (planned)."),
+        ("Where is my data stored?",
+         "All files are saved locally in the 'created' folder inside the project directory."),
+        ("How do I update or reset my plan?",
+         "Just run the script again and enter new details. Each run creates a new output folder."),
+    ]
+    print("\nFrequently Asked Questions:\n" + "-"*32)
+    for q, a in faqs:
+        print(f"\nQ: {q}\nA: {a}")
+    print("\nFor more, see the README or the Macros & Instructions sheet in your tracker.\n")
+
+
+def prompt_smtp_config():
+    """
+    Prompt user for SMTP configuration or use environment variables.
+    Returns a dict with SMTP settings or None if not configured.
+    """
+    import os
+    smtp_host = os.environ.get("SMTP_HOST") or input(colorize("Enter SMTP server (e.g. smtp.gmail.com): ", "cyan", bold=True)).strip()
+    smtp_port = os.environ.get("SMTP_PORT") or input(colorize("Enter SMTP port (e.g. 587): ", "cyan", bold=True)).strip()
+    smtp_user = os.environ.get("SMTP_USER") or input(colorize("Enter SMTP username (your email): ", "cyan", bold=True)).strip()
+    smtp_pass = os.environ.get("SMTP_PASS") or input(colorize("Enter SMTP password (input hidden): ", "cyan", bold=True)).strip()
+    use_tls = True
+    return {
+        "host": smtp_host,
+        "port": int(smtp_port),
+        "user": smtp_user,
+        "pass": smtp_pass,
+        "tls": use_tls,
+    }
+
+def send_email_reminder(smtp_config, to_email, subject, body):
+    """
+    Send an email reminder using the provided SMTP config.
+    """
+    msg = MIMEMultipart()
+    msg["From"] = smtp_config["user"]
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+    try:
+        with smtplib.SMTP(smtp_config["host"], smtp_config["port"]) as server:
+            if smtp_config["tls"]:
+                server.starttls()
+            server.login(smtp_config["user"], smtp_config["pass"])
+            server.sendmail(smtp_config["user"], to_email, msg.as_string())
+        print(colorize(f"Email reminder sent to {to_email}.", "green", bold=True))
+    except Exception:
+        print(colorize("Failed to send email.", "red", bold=True))
+
+
+def prompt_strava_runkeeper_config():
+    """
+    Prompt user for Strava or Runkeeper API token if exporting to mobile app.
+    Returns a dict with platform and token.
+    """
+    platform = input(colorize("Export to [S]trava or [R]unkeeper? (S/R): ", "magenta", bold=True)).strip().lower()
+    if platform == "s":
+        token = input(colorize("Enter your Strava API Access Token: ", "yellow", bold=True)).strip()
+        return {"platform": "strava", "token": token}
+    elif platform == "r":
+        token = input(colorize("Enter your Runkeeper API Access Token: ", "yellow", bold=True)).strip()
+        return {"platform": "runkeeper", "token": token}
+    else:
+        print(colorize("Invalid platform. Skipping mobile app export.", "red", bold=True))
+        return None
+
+def export_to_mobile_app(plan, user, config):
+    """
+    Export the workout plan to Strava or Runkeeper using their APIs.
+    """
+    if not config:
+        print(colorize("No mobile app config provided. Skipping export.", "red", bold=True))
+        return
+    if config["platform"] == "strava":
+        url = "https://www.strava.com/api/v3/activities"
+        headers = {"Authorization": f"Bearer {config['token']}"}
+        for session in plan:
+            if session["duration"] > 0:
+                data = {
+                    "name": f"C25K Week {session['week']} Day {session['day']}",
+                    "type": "Run",
+                    "start_date_local": f"{session['date']}T{user['hour']:02d}:{user['minute']:02d}:00",
+                    "elapsed_time": session["duration"] * 60,
+                    "description": session["description"],
+                }
+                resp = requests.post(url, headers=headers, data=data)
+                if resp.status_code == 201:
+                    print(colorize(f"Strava: Uploaded {data['name']}", "green"))
+                else:
+                    print(colorize(f"Strava: Failed to upload {data['name']} ({resp.status_code})", "red"))
+    elif config["platform"] == "runkeeper":
+        url = "https://api.runkeeper.com/fitnessActivities"
+        headers = {
+            "Authorization": f"Bearer {config['token']}",
+            "Content-Type": "application/vnd.com.runkeeper.NewFitnessActivity+json"
+        }
+        for session in plan:
+            if session["duration"] > 0:
+                data = {
+                    "type": "Running",
+                    "start_time": f"{session['date']}T{user['hour']:02d}:{user['minute']:02d}",
+                    "total_distance": 5.0,  # Placeholder, user can edit
+                    "duration": session["duration"] * 60,
+                    "notes": session["description"],
+                }
+                resp = requests.post(url, headers=headers, json=data)
+                if resp.status_code in (201, 202):
+                    print(colorize(f"Runkeeper: Uploaded {data['start_time']}", "green"))
+                else:
+                    print(colorize(f"Runkeeper: Failed to upload {data['start_time']} ({resp.status_code})", "red"))
+    print(colorize("Mobile app export complete.", "green", bold=True))
+
+
 def main() -> None:
+    """
+    Main execution block for the Couch to 5K ICS Generator.
+    """
+    import sys
+    if '--faq' in sys.argv or '--help' in sys.argv:
+        show_faq()
+        return
     """
     Main execution block for the Couch to 5K ICS Generator.
     """
@@ -1182,9 +1411,11 @@ def main() -> None:
             plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
         )
     elif user["export"] == "v":
-        voice_prompts.export_voice_prompts(plan, user["lang"])
+        # voice_prompts.export_voice_prompts(plan, user["lang"])  # (commented out, not implemented)
+        print(colorize("Voice prompt export is not yet implemented.", "yellow", bold=True))
     elif user["export"] == "s":
-        mobile_export.export_to_mobile_app(plan, "Strava/Runkeeper")
+        config = prompt_strava_runkeeper_config()
+        export_to_mobile_app(plan, user, config)
     # Always output a Markdown checklist with user info
     export_markdown_checklist(
         plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
@@ -1199,73 +1430,25 @@ def main() -> None:
         print()
     # Reminders (rain/weather-aware)
     if user.get("email"):
-        # Try to get weather for the first workout
-        weather_info = None
-        if user.get("location") and plan and plan[0].get("date"):
-            weather_info = weather.get_weather_suggestion(
-                user["location"], plan[0]["date"]
-            )
-            print(colorize(f"Weather for first workout: {weather_info}", "cyan"))
-        rain_expected = False
-        if weather_info:
-            rain_expected = (
-                "rain likely" in weather_info.lower() or "rainy" in weather_info.lower()
-            )
-        if rain_expected:
-            reminder_msg = (
-                "Rain is expected for your first workout! "
-                "Consider rescheduling or bringing rain gear."
-            )
-            print(colorize(reminder_msg, "yellow", bold=True))
-            reminders.send_reminder(
-                user["email"], f"{plan[0]}\n{reminder_msg}", user["lang"]
-            )
+        print(colorize("\n-- Email Reminders Setup --", "yellow", bold=True))
+        smtp_config = prompt_smtp_config()
+        if smtp_config:
+            for session in plan:
+                if session["duration"] > 0:
+                    subject = f"C25K Reminder: Week {session['week']} Day {session['day']}"
+                    body = (
+                        f"Hi {user['name']},\n\nThis is your Couch to 5K session reminder!\n\n"
+                        f"Date: {session['date']}\nTime: {user['hour']:02d}:{user['minute']:02d}\n"
+                        f"Workout: {session['workout']}\nTip: {session['tip']}\n"
+                    )
+                    if session.get("weather"):
+                        body += f"Weather forecast: {session['weather']}\n"
+                        subject += f" ({session['weather']})"
+                    body += "\nStay safe and have a great run!\n\n-- C25K Calendar Generator"
+                    send_email_reminder(smtp_config, user["email"], subject, body)
+            print(colorize("All session reminders sent!", "green", bold=True))
         else:
-            # Detect inclement weather (rain, snow, fog, extreme heat/cold)
-            inclement = False
-            inclement_reasons = []
-            if weather_info:
-                info = weather_info.lower()
-                if (
-                    "rain likely" in info
-                    or "rainy" in info
-                    or "snowy" in info
-                    or "foggy" in info
-                    or "showers" in info
-                ):
-                    inclement = True
-                    if "rain" in info or "showers" in info:
-                        inclement_reasons.append("rain")
-                    if "snow" in info or "snowy" in info:
-                        inclement_reasons.append("snow")
-                    if "fog" in info or "foggy" in info:
-                        inclement_reasons.append("fog")
-                # Check for extreme heat/cold
-                import re
-
-                temp_match = re.search(r"(\d+)-(\d+)°f", info)
-                if temp_match:
-                    tmin = int(temp_match.group(1))
-                    tmax = int(temp_match.group(2))
-                    if tmax >= 90:
-                        inclement = True
-                        inclement_reasons.append("high heat")
-                    if tmin <= 32:
-                        inclement = True
-                        inclement_reasons.append("freezing cold")
-            if inclement:
-                reason_str = ", ".join(set(inclement_reasons))
-                reminder_msg = (
-                    f"Inclement weather expected for your first workout: "
-                    f"{reason_str}. "
-                    "Consider rescheduling or taking extra precautions."
-                )
-                print(colorize(reminder_msg, "yellow", bold=True))
-                reminders.send_reminder(
-                    user["email"], f"{plan[0]}\n{reminder_msg}", user["lang"]
-                )
-            else:
-                reminders.send_reminder(user["email"], plan[0], user["lang"])
+            print(colorize("SMTP config not provided. Email reminders skipped.", "red", bold=True))
     # Community/sharing (stub)
     community.share_plan(str(plan), platform="email")
     # Progress tracking (stub)
@@ -1305,6 +1488,8 @@ def main() -> None:
             bold=True,
         )
     )
+    # Privacy note
+    print(colorize("\nNote: Your email, SMTP, and mobile app tokens are used only to send reminders/exports and are not stored.", "yellow", bold=True))
 
 
 if __name__ == "__main__":

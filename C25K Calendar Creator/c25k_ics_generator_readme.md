@@ -84,13 +84,21 @@ start_day = datetime(2025, 7, 15)
 ## Advanced Features
 
 - **Dynamic Start Date:** Start on a specific date or next Monday.
-- **Reminders:** Optionally send an email reminder for your first workout (stub).
+- **Reminders:** Optionally send real email reminders for each workout session. Configure your SMTP server (Gmail, Outlook, etc.) at the prompt or via environment variables. Your credentials are used only to send reminders and are not stored.
+- **Mobile App Export:** Export your plan directly to Strava or Runkeeper. Enter your API access token at the prompt. Each session will be uploaded as a planned activity. Your token is used only for export and is not stored.
 - **Weather Suggestions:** Get a weather suggestion for your first workout (stub).
 - **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
-- **Mobile App Export:** Export to Strava/Runkeeper (stub).
 - **PDF Export:** Export plan as a PDF (stub).
 - **Voice Prompts:** Export voice/text prompts for workouts (stub).
 - **Community/Sharing:** Share your plan via email (stub).
+
+### Mobile App Export (New!)
+
+- You can now export your plan directly to Strava or Runkeeper.
+- When prompted, select Strava or Runkeeper and enter your API access token.
+- Each session will be uploaded as a planned activity/workout to your account.
+- **Privacy:** Your API token is used only for export and is not stored.
+- **Troubleshooting:** You must create an API token in your Strava or Runkeeper account. For Strava, see https://www.strava.com/settings/api. For Runkeeper, see https://developer.runkeeper.com/healthgraph/overview.
 
 ### Usage Notes
 
