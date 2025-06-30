@@ -161,6 +161,23 @@ start_day = datetime(2025, 7, 15)
 - **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
 - **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
 
+## Using Templates (Save & Load Your Info)
+
+You can save your user information and plan as a template for easy reuse:
+
+1. **Create a Template:**
+   - When prompted after entering your info, answer `Y` to "Save your settings as a template for future use?" and provide a template name.
+   - Your info and plan will be saved in the `templates/` folder as `<template_name>.json`.
+
+2. **Load a Template:**
+   - On future runs, answer `Y` to "Load a saved plan template?" at the start.
+   - Select your template by number or name. Your saved info will be loaded automatically.
+
+3. **Edit or Delete Templates:**
+   - Templates are stored as JSON files in the `templates/` directory. You can edit them with a text editor or delete them manually if needed.
+
+**Tip:** Templates store your user info (name, age, weight, etc.) and plan settings. This saves time if you want to generate new calendars or trackers with the same info.
+
 ## Accessibility Features
 
 - **High-Contrast Mode:** Available for CLI, Markdown, Excel, and PDF exports. PDF and Markdown exports use high-contrast colors for improved visibility if selected.

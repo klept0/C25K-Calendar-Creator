@@ -34,7 +34,6 @@ from c25k_utils import (
     weather,
 )
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
 
 # --- Advanced Macros Implementation for progress tracker CSV ---
 # Add these as columns or sheets in name_progress_tracker.csv as appropriate.
@@ -533,8 +532,8 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     plan: List[Dict[str, Any]] = []
     start_day = user.get("start_day")
     if not start_day:
-        from datetime import datetime
-        start_day = datetime(2025, 7, 15)
+        # Use today's date if not specified
+        start_day = datetime.now()
     # Determine weight and threshold in correct units
     weight = user["weight"]
     weight_unit = user.get("weight_unit", "i")
@@ -811,6 +810,24 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Health_Log",
         ]
         ws.append(columns)
+        # Add a legend row below the header
+        legend = [
+            "Week number (1-10)",
+            "Day of week (1-3 or name)",
+            "Date you completed the session (MM/DD/YYYY)",
+            "Mark 'Y' if completed, 'N' if not",
+            "Any notes about the session (optional)",
+            "Current streak of completed sessions",
+            "'Missed' if session overdue",
+            "Plan adjustment suggestion",
+            "Effort rating (1-5, 1=Easy, 5=Hard)",
+            "Milestone (auto, do not edit)",
+            "Weather (auto or fill in)",
+            "Motivational quote (auto, do not edit)",
+            "Session rating (optional)",
+            "Health log (optional)",
+        ]
+        ws.append(legend)
         # Set default font and alignment for header row (after append)
         for cell in ws[1]:
             cell.font = Font(name=default_font_name, size=default_font_size, bold=True)
@@ -855,14 +872,6 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             ])
             # Set number format for the 'completed' column (D)
             ws.cell(row=i, column=4).number_format = "General"
-        # Auto-size columns to fit content
-        for col_idx, col in enumerate(columns, 1):
-            max_length = len(col)
-            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx, max_row=total_rows + 1):
-                for cell in row:
-                    if cell.value:
-                        max_length = max(max_length, len(str(cell.value)))
-            ws.column_dimensions[get_column_letter(col_idx)].width = max_length + 2
         # 1. Completion checkmarks/icons for completed sessions (D):
         ws.conditional_formatting.add(
             f"D2:D{total_rows+1}",
@@ -1302,13 +1311,26 @@ def main() -> None:
             print(colorize(f"Template '{template_name}' not found.", "red", bold=True))
             return None
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        # Convert start_day back to datetime if present
+        user = data.get("user", {})
+        if isinstance(user.get("start_day"), str) and user["start_day"]:
+            try:
+                user["start_day"] = datetime.fromisoformat(user["start_day"])
+            except Exception:
+                user["start_day"] = None
+        data["user"] = user
+        return data
 
     def save_template(plan, user, template_name):
         """Save the current plan and user settings as a template."""
         os.makedirs(TEMPLATE_DIR, exist_ok=True)
         path = os.path.join(TEMPLATE_DIR, template_name + ".json")
-        data = {"plan": plan, "user": user}
+        # Convert datetime to isoformat string for JSON serialization
+        user_copy = user.copy()
+        if isinstance(user_copy.get("start_day"), datetime):
+            user_copy["start_day"] = user_copy["start_day"].isoformat()
+        data = {"plan": plan, "user": user_copy}
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
         print(colorize(f"Template '{template_name}' saved.", "green", bold=True))
@@ -1605,7 +1627,7 @@ def main() -> None:
             "Good luck!",
             "green",
             bold=True,
-        )
+               )
     )
     # Privacy note
     print(colorize("\nNote: Your email, SMTP, and mobile app tokens are used only to send reminders/exports and are not stored.", "yellow", bold=True))
