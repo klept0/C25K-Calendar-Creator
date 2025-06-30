@@ -1190,6 +1190,32 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
                     "\n" in str(cell.value) or len(str(cell.value)) > 60
                 ):
                     ws2.row_dimensions[cell.row].height = 32
+        # --- Analytics Sheet ---
+        ws3 = wb.create_sheet("Analytics")
+        ws3["A1"] = "C25K Analytics Overview"
+        ws3["A2"] = "Total Sessions:"
+        ws3["B2"] = f"=COUNTA(Progress!A2:A1000)"
+        ws3["A3"] = "Sessions Completed:"
+        ws3["B3"] = f"=COUNTIF(Progress!D2:D1000,\"Y\")"
+        ws3["A4"] = "Sessions Missed:"
+        ws3["B4"] = f"=COUNTIF(Progress!G2:G1000,\"Missed\")"
+        ws3["A5"] = "Longest Streak:"
+        ws3["B5"] = f"=MAX(Progress!F2:F1000)"
+        ws3["A6"] = "Average Effort:"
+        ws3["B6"] = f"=AVERAGE(Progress!I2:I1000)"
+        ws3["A7"] = "Goal Progress %:"
+        ws3["B7"] = f"=COUNTIF(Progress!D2:D1000,\"Y\")/COUNTA(Progress!D2:D1000)"
+        ws3["A9"] = "Chart Instructions:"
+        ws3["A10"] = "- To create a Progress Over Time chart: Select Progress!A2:A1000 and D2:D1000, Insert > Line Chart."
+        ws3["A11"] = "- To chart Effort Trends: Select Progress!A2:A1000 and I2:I1000, Insert > Line or Bar Chart."
+        ws3["A12"] = "- To analyze Weather vs. Performance: Select Progress!K2:K1000 and D2:D1000, Insert > Pivot Table or Chart."
+        ws3["A13"] = "- For more analytics, use Excel's built-in chart and analysis tools."
+        # Style Analytics sheet
+        for row in ws3.iter_rows(min_row=1, max_row=13, min_col=1, max_col=2):
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True, vertical="center", horizontal="left")
+        ws3.column_dimensions["A"].width = 32
+        ws3.column_dimensions["B"].width = 24
         wb.save(filename)
     return filename
 

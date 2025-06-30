@@ -17,6 +17,7 @@ Random Things I Have Made - random ideas that may not be 100%
 
 - **Plan Customization:** Choose number of weeks and days per week for your plan.
 - **Customizable Plan Templates:** Save and load custom plan templates for different goals or fitness levels. You can now save your current plan as a template, load a template at the start, and select from built-in or custom templates. *(Newly implemented)*
+- **Advanced Analytics:** The Excel tracker now includes an Analytics sheet with summary statistics (totals, averages, streaks, missed sessions, effort trends, goal progress) and instructions for creating charts (progress over time, effort trends, weather vs. performance). *(Newly implemented)*
 - **Accessibility:** High-contrast and large-font options for Markdown and Excel outputs.
 - **Dynamic Start Date:** Start on a specific date or next Monday.
 - **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
@@ -32,14 +33,13 @@ Random Things I Have Made - random ideas that may not be 100%
 - **Weather Suggestions:** Real, actionable weather suggestions for your first workout are now provided using live forecast data. Enter your city or ZIP at the prompt to get advice (e.g., "Great weather for running!", "Rain expected, consider rescheduling or wear a rain jacket").
 - **QR Code Export:** Instantly generate a QR code image containing a detailed summary of your C25K plan (all workouts/tips, not just a short string). The QR code is large and high-contrast if accessibility options are enabled, and a Markdown file is generated with the QR code and full plan summary for easy sharing and accessibility. Requires the `qrcode` Python package (`pip install qrcode[pil]`).
 - **PDF Export:** Visually rich, accessible PDF export is now fully supported. The PDF includes a cover page, full plan table, accessibility options, motivational quotes, resource links, and privacy note. Requires the `reportlab` Python package (`pip install reportlab`).
+- **Wearables Integration:** Direct export/import for popular fitness trackers and smartwatches is now supported. Export your plan as Apple Health CSV, Google Fit CSV, or upload directly to Strava/Runkeeper via API. See below for import instructions. *(Newly implemented)*
 
 </details>
 
 <details>
 <summary>Planned / Placeholder / Stub Features</summary>
 
-- **Advanced Analytics (trend lines, analytics export):** Planned.
-- **Wearables Integration:** Planned.
 - **Feedback Loop:** Planned.
 - **Further Accessibility Polish:** Planned.
 - **Gamification Enhancements:** Planned.
@@ -99,3 +99,14 @@ This tool can fetch real weather forecasts for your session dates if you provide
 3. If no API key is set, the tool will use a built-in weather stub for demo purposes.
 
 See the code and documentation for more details.
+
+<details>
+<summary>Wearables Import Instructions</summary>
+
+- **Apple Health:** Export your plan as a Health-compatible CSV file. Import into Apple Health using the Shortcuts app or a 3rd-party tool (e.g., Health Importer). Map columns to "Running" workouts as needed.
+- **Google Fit:** Export your plan as a Google Fit CSV file. Import into Google Fit using the web interface or a compatible app.
+- **Strava/Runkeeper:** Export your plan directly to Strava or Runkeeper by entering your API token at the prompt. Each session will be uploaded as a planned activity. Your token is used only for export and is not stored.
+
+See the tool README for more details and troubleshooting tips.
+
+</details>
