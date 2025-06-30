@@ -810,7 +810,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Health_Log",
         ]
         ws.append(columns)
-        # Add a legend row below the header
+        # Add a legend row below the header and visually highlight it
         legend = [
             "Week number (1-10)",
             "Day of week (1-3 or name)",
@@ -828,10 +828,34 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Health log (optional)",
         ]
         ws.append(legend)
+        # Visually highlight the legend row (row 2)
+        for cell in ws[2]:
+            cell.font = Font(italic=True, color="888888")
+            cell.fill = PatternFill(start_color="F4F4F4", end_color="F4F4F4", fill_type="solid")
+        # Add a sample data row (row 3)
+        sample_row = [
+            1, 1, "06/01/2025", "Y", "Felt good, no issues.", 1, "", "On Track", 3, "First week done!", "Sunny 75°F", "You are stronger than you think!", 4, "BP: 120/80"
+        ]
+        ws.append(sample_row)
+        for cell in ws[3]:
+            cell.font = Font(color="0070C0")
+            cell.fill = PatternFill(start_color="E2EFDA", end_color="E2EFDA", fill_type="solid")
         # Set default font and alignment for header row (after append)
         for cell in ws[1]:
             cell.font = Font(name=default_font_name, size=default_font_size, bold=True)
             cell.alignment = Alignment(horizontal="center", vertical="center")
+        # Add data validation for 'completed' (D) and 'Effort' (I)
+        from openpyxl.worksheet.datavalidation import DataValidation
+        # Calculate total_rows for data validation ranges
+        weeks = user.get("weeks", 10)
+        days_per_week = user.get("days_per_week", 3)
+        total_rows = weeks * days_per_week
+        dv_completed = DataValidation(type="list", formula1='"Y,N"', allow_blank=True)
+        dv_effort = DataValidation(type="whole", operator="between", formula1="1", formula2="5", allow_blank=True)
+        ws.add_data_validation(dv_completed)
+        ws.add_data_validation(dv_effort)
+        dv_completed.add(f"D4:D{total_rows+3}")
+        dv_effort.add(f"I4:I{total_rows+3}")
         # Motivational quotes list
         motivational_quotes = [
             "You are stronger than you think!",
@@ -850,8 +874,7 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
         total_rows = weeks * days_per_week
         start_day = user.get("start_day")
         if not start_day:
-            from datetime import datetime
-            start_day = datetime(2025, 7, 15)
+            start_day = datetime.now()
         # Custom rest day scheduling
         rest_days = user.get("rest_days")
         if not rest_days:
