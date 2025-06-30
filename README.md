@@ -22,8 +22,9 @@ Random Things I Have Made - random ideas that may not be 100%
 - **Motivational Quotes, Adaptive Plan, Custom Rest Days, Dashboard, Badges, Reminders, Weekly Review Prompts:** All included in the Excel tracker.
 - **Reminders:** Real email reminders for each session are now supported. Configure your SMTP server at the prompt or via environment variables. See the tool README for setup instructions.
 - **Mobile App Export:** Real Strava/Runkeeper export is now supported. Enter your API token at the prompt to upload your plan. See the tool README for setup instructions.
+- **Apple Health Export:** Apple Health CSV export is now supported. Import the CSV into Apple Health using Shortcuts or a 3rd-party app. See the tool README for setup instructions.
 - **Output Directory Logic:** All exports are saved in a user-specific folder inside the project.
-- **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel.
+- **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel, Apple Health CSV.
 - **Markdown Checklist Export:** Always generated with user info and notes.
 - **Colorized CLI Prompts and Feedback:** For a more user-friendly experience.
 
@@ -33,7 +34,6 @@ Random Things I Have Made - random ideas that may not be 100%
 <summary>Planned / Placeholder / Stub Features</summary>
 
 - **Weather Suggestions:** Weather integration is a stub (no real API call).
-- **Apple Health Export:** Documented as planned only.
 - **QR Code Export:** Documented as planned only.
 - **PDF Export:** PDF export is a stub (calls a module, may not be fully implemented).
 - **Voice Prompts:** Voice/text prompt export is a stub.

@@ -1297,6 +1297,33 @@ def export_to_mobile_app(plan, user, config):
     print(colorize("Mobile app export complete.", "green", bold=True))
 
 
+def export_apple_health_csv(plan: list, filename: str) -> None:
+    """
+    Export the workout plan to an Apple Health-compatible CSV file.
+    Columns: Type, Start, End, Calories, Distance, Duration, Source
+    """
+    import csv
+    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = [
+            "Type", "Start", "End", "Calories", "Distance (mi)", "Duration (min)", "Source"
+        ]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for session in plan:
+            if session["duration"] > 0:
+                # Estimate distance as 2.0 miles per session (user can edit)
+                writer.writerow({
+                    "Type": "Running",
+                    "Start": f"{session['date']} {session.get('start_time', '07:00')}",
+                    "End": f"{session['date']} {session.get('end_time', '07:00')}",
+                    "Calories": "",
+                    "Distance (mi)": 2.0,
+                    "Duration (min)": session["duration"],
+                    "Source": "C25K Calendar Creator"
+                })
+    print(f"Apple Health CSV file '{filename}' created successfully.")
+
+
 def main() -> None:
     """
     Main execution block for the Couch to 5K ICS Generator.
@@ -1416,6 +1443,8 @@ def main() -> None:
     elif user["export"] == "s":
         config = prompt_strava_runkeeper_config()
         export_to_mobile_app(plan, user, config)
+    elif user["export"] == "a":
+        export_apple_health_csv(plan, os.path.join(outdir, "Couch_to_5K_AppleHealth.csv"))
     # Always output a Markdown checklist with user info
     export_markdown_checklist(
         plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
