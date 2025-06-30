@@ -735,8 +735,8 @@ def export_markdown_checklist(
         style += "</style>\n\n"
         content = style + content
         # Also call accessibility module for further processing (now includes dyslexia_font)
-        content = accessibility.apply_accessibility_options(
-            content, user.get("high_contrast"), user.get("large_font"), user.get("dyslexia_font")
+            content = accessibility.apply_accessibility_options(
+            content, bool(user.get("high_contrast")), bool(user.get("large_font"))
         )
     with open(filename, "w", encoding="utf-8") as mdfile:
         mdfile.write(content)
