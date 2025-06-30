@@ -735,7 +735,7 @@ def export_markdown_checklist(
         style += "</style>\n\n"
         content = style + content
         # Also call accessibility module for further processing (now includes dyslexia_font)
-            content = accessibility.apply_accessibility_options(
+        content = accessibility.apply_accessibility_options(
             content, bool(user.get("high_contrast")), bool(user.get("large_font"))
         )
     with open(filename, "w", encoding="utf-8") as mdfile:
@@ -773,7 +773,12 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
     filename = os.path.join(outdir, f"{user['name']}_progress_tracker.xlsx")
-    if not os.path.exists(filename):
+    
+    # Initialize or load existing workbook
+    if os.path.exists(filename):
+        from openpyxl import load_workbook
+        wb = load_workbook(filename)
+    else:
         wb = Workbook()
         ws = wb.active
         if ws is None:
@@ -1015,17 +1020,17 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "To use: Press Alt+F11, Insert > Module, paste the macro, and run HighContrastMode."
         )
         # Add all advanced formulas, each with a bold+underlined title and formulas on individual lines
-        row = 36
+        current_row = 36
 
         def add_formula_section(title, lines):
-            nonlocal row
-            ws2[f"A{row}"].value = title
-            ws2[f"A{row}"].font = Font(bold=True, underline="single")
-            row += 1
+            nonlocal current_row
+            ws2[f"A{current_row}"].value = title
+            ws2[f"A{current_row}"].font = Font(bold=True, underline="single")
+            current_row += 1
             for line in lines:
-                ws2[f"A{row}"].value = line
-                row += 1
-            row += 1  # Blank line after each section
+                ws2[f"A{current_row}"].value = line
+                current_row += 1
+            current_row += 1  # Blank line after each section
 
         add_formula_section(
             "Current_Streak (F):",
@@ -1280,13 +1285,113 @@ def main() -> None:
         )
     )
     print(colorize("=" * 68, "yellow", bold=True))
-    user = get_user_info()
-    if not user:
-        print(
-            "Missing or invalid information. "
-            "Please provide all required details to generate your calendar."
-        )
-        return
+    
+    # --- Plan Template Logic ---
+    import glob
+    TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+
+    def list_templates():
+        """List available plan templates (built-in and user)."""
+        templates = glob.glob(os.path.join(TEMPLATE_DIR, "*.json"))
+        return [os.path.basename(t)[:-5] for t in templates]
+
+    def load_template(template_name):
+        """Load a plan template by name (without .json)."""
+        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+        if not os.path.exists(path):
+            print(colorize(f"Template '{template_name}' not found.", "red", bold=True))
+            return None
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def save_template(plan, user, template_name):
+        """Save the current plan and user settings as a template."""
+        os.makedirs(TEMPLATE_DIR, exist_ok=True)
+        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+        data = {"plan": plan, "user": user}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        print(colorize(f"Template '{template_name}' saved.", "green", bold=True))
+
+    # Prompt to load a template or use defaults
+    use_template = (
+        input(colorize("Load a saved plan template? [Y/N] (default N): ", "yellow", bold=True)).strip().lower() == "y"
+    )
+    
+    plan = None
+    user = None
+    
+    if use_template:
+        available = list_templates()
+        if not available:
+            print(colorize("[Error] No templates found. A default template will be created and used.", "red", bold=True))
+            # Create a default template if none exists
+            default_template_path = os.path.join(TEMPLATE_DIR, "default.json")
+            if not os.path.exists(default_template_path):
+                default_template = {
+                    "plan": [],
+                    "user": {
+                        "name": "Default User",
+                        "age": 30,
+                        "weight": 154,
+                        "gender": "other",
+                        "unit": "i",
+                        "hour": 7,
+                        "minute": 0,
+                        "lang": "e",
+                        "export": "i",
+                        "goal": "Complete Couch to 5K",
+                        "weeks": 10,
+                        "days_per_week": 3,
+                        "high_contrast": False,
+                        "large_font": False,
+                        "dyslexia_font": False,
+                        "start_day": None,
+                        "email": "",
+                        "location": "",
+                        "alert_minutes": 30,
+                        "rest_days": ["Sat", "Sun"],
+                        "anonymize": False,
+                        "weight_unit": "i"
+                    }
+                }
+                with open(default_template_path, "w", encoding="utf-8") as f:
+                    json.dump(default_template, f, indent=2)
+            available = ["default"]
+        print(colorize("Available templates:", "cyan", bold=True))
+        for i, t in enumerate(available, 1):
+            print(f"  {i}. {t}")
+        idx = input(colorize("Enter template number or name: ", "green", bold=True)).strip()
+        if idx.isdigit() and 1 <= int(idx) <= len(available):
+            template_name = available[int(idx) - 1]
+        else:
+            template_name = idx if idx else "default"
+        template = load_template(template_name)
+        if template:
+            plan = template["plan"]
+            user = template["user"]
+            print(colorize(f"Loaded template '{template_name}'.", "green", bold=True))
+        else:
+            print(colorize(f"[Error] Template '{template_name}' could not be loaded. Falling back to user input.", "red", bold=True))
+    
+    # If not loading a template, gather user info and generate plan as usual
+    if not use_template or plan is None or user is None:
+        user = get_user_info()
+        if not user:
+            print(
+                "Missing or invalid information. "
+                "Please provide all required details to generate your calendar."
+            )
+            return
+        plan = get_workout_plan(user)
+        
+        # Offer to save as template
+        save_as_template = input(colorize("Save your settings as a template for future use? [Y/N] (default N): ", "yellow", bold=True)).strip().lower() == "y"
+        if save_as_template:
+            template_name = input(colorize("Enter template name: ", "green", bold=True)).strip()
+            if template_name:
+                save_template(plan, user, template_name)
+    
     # Show summary before generating
     print(colorize("\nYour C25K Plan Summary:", "cyan", bold=True))
     print(
@@ -1315,32 +1420,6 @@ def main() -> None:
         if user["large_font"]:
             print(colorize("Large font", "yellow", bold=True), end="")
         print()
-    # --- Plan Template Logic ---
-    import glob
-    TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-
-    def list_templates():
-        """List available plan templates (built-in and user)."""
-        templates = glob.glob(os.path.join(TEMPLATE_DIR, "*.json"))
-        return [os.path.basename(t)[:-5] for t in templates]
-
-    def load_template(template_name):
-        """Load a plan template by name (without .json)."""
-        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
-        if not os.path.exists(path):
-            print(colorize(f"Template '{template_name}' not found.", "red", bold=True))
-            return None
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def save_template(plan, user, template_name):
-        """Save the current plan and user settings as a template."""
-        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
-        data = {"plan": plan, "user": user}
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        print(colorize(f"Template '{template_name}' saved.", "green", bold=True))
-
     # Prompt to load a template or use defaults
     use_template = (
         input(colorize("Load a saved plan template? [Y/N] (default N): ", "yellow", bold=True)).strip().lower() == "y"
@@ -1537,6 +1616,7 @@ def main() -> None:
         # Save feedback to a local file in the output directory
         feedback_path = os.path.join(outdir, "user_feedback.txt")
         with open(feedback_path, "a", encoding="utf-8") as f:
+            from datetime import datetime
             f.write(f"Feedback on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}:\n{feedback}\n\n")
         print(colorize("Thank you for your feedback! It has been saved locally.", "green", bold=True))
     else:
