@@ -1384,6 +1384,33 @@ def export_voice_prompts(plan, user, outdir):
     print(f"Shareable email draft '{email_path}' created successfully.")
 
 
+# --- Plan Template Logic ---
+import glob
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+
+def list_templates():
+    """List available plan templates (built-in and user)."""
+    templates = glob.glob(os.path.join(TEMPLATE_DIR, "*.json"))
+    return [os.path.basename(t)[:-5] for t in templates]
+
+def load_template(template_name):
+    """Load a plan template by name (without .json)."""
+    path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+    if not os.path.exists(path):
+        print(colorize(f"Template '{template_name}' not found.", "red", bold=True))
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_template(plan, user, template_name):
+    """Save the current plan and user settings as a template."""
+    path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+    data = {"plan": plan, "user": user}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    print(colorize(f"Template '{template_name}' saved.", "green", bold=True))
+
+
 def main() -> None:
     """
     Main execution block for the Couch to 5K ICS Generator.
@@ -1452,8 +1479,66 @@ def main() -> None:
         if user["large_font"]:
             print(colorize("Large font", "yellow", bold=True), end="")
         print()
-    # Plan customization
-    plan = get_workout_plan(user)
+    # --- Plan Template Logic ---
+    import glob
+    TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+
+    def list_templates():
+        """List available plan templates (built-in and user)."""
+        templates = glob.glob(os.path.join(TEMPLATE_DIR, "*.json"))
+        return [os.path.basename(t)[:-5] for t in templates]
+
+    def load_template(template_name):
+        """Load a plan template by name (without .json)."""
+        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+        if not os.path.exists(path):
+            print(colorize(f"Template '{template_name}' not found.", "red", bold=True))
+            return None
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def save_template(plan, user, template_name):
+        """Save the current plan and user settings as a template."""
+        path = os.path.join(TEMPLATE_DIR, template_name + ".json")
+        data = {"plan": plan, "user": user}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        print(colorize(f"Template '{template_name}' saved.", "green", bold=True))
+
+    # Prompt to load a template or use defaults
+    use_template = (
+        input(colorize("Load a saved plan template? [Y/N] (default N): ", "yellow", bold=True)).strip().lower() == "y"
+    )
+    if use_template:
+        available = list_templates()
+        if available:
+            print(colorize("Available templates:", "cyan", bold=True))
+            for i, t in enumerate(available, 1):
+                print(f"  {i}. {t}")
+            idx = input(colorize("Enter template number or name: ", "green", bold=True)).strip()
+            if idx.isdigit() and 1 <= int(idx) <= len(available):
+                template_name = available[int(idx) - 1]
+            else:
+                template_name = idx
+            template = load_template(template_name)
+            if template:
+                plan = template["plan"]
+                user = template["user"]
+                print(colorize(f"Loaded template '{template_name}'.", "green", bold=True))
+            else:
+                print(colorize("Falling back to default plan.", "yellow", bold=True))
+                plan = None
+                user = None
+        else:
+            print(colorize("No templates found. Using default plan.", "yellow", bold=True))
+            plan = None
+            user = None
+    # If not loading a template, gather user info and generate plan as usual
+    if not use_template or plan is None or user is None:
+        user = get_user_info()
+        if not user:
+            return
+        plan = get_workout_plan(user)
     # Dynamic start date
     if user.get("start_day"):
         start_day = user["start_day"]
@@ -1504,10 +1589,8 @@ def main() -> None:
         export_to_mobile_app(plan, user, config)
     elif user["export"] == "a":
         export_apple_health_csv(plan, os.path.join(outdir, "Couch_to_5K_AppleHealth.csv"))
-    elif user["export"] == "h":
-        export_community_share(plan, user, outdir)
-    elif user["export"] == "q":
-        qr_export.export_qr_code(plan, user, outdir)
+    # elif user["export"] == "h":
+    #     export_community_share(plan, user, outdir)
     # Always output a Markdown checklist with user info
     export_markdown_checklist(
         plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
@@ -1542,7 +1625,7 @@ def main() -> None:
         else:
             print(colorize("SMTP config not provided. Email reminders skipped.", "red", bold=True))
     # Community/sharing (stub)
-    community.share_plan(str(plan), platform="email")
+    # community.share_plan(str(plan), platform="email")
     # Progress tracking (stub)
     # Create the progress tracker file if it doesn't exist
     progress_filename = create_progress_tracker(user, outdir)

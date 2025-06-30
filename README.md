@@ -16,6 +16,7 @@ Random Things I Have Made - random ideas that may not be 100%
 <summary>Implemented Features</summary>
 
 - **Plan Customization:** Choose number of weeks and days per week for your plan.
+- **Customizable Plan Templates:** Save and load custom plan templates for different goals or fitness levels. You can now save your current plan as a template, load a template at the start, and select from built-in or custom templates. *(Newly implemented)*
 - **Accessibility:** High-contrast and large-font options for Markdown and Excel outputs.
 - **Dynamic Start Date:** Start on a specific date or next Monday.
 - **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
@@ -37,15 +38,12 @@ Random Things I Have Made - random ideas that may not be 100%
 <details>
 <summary>Planned / Placeholder / Stub Features</summary>
 
-- **Community/Sharing:** Sharing via email is a stub.
-- **In-app FAQ/Help:** Documented as planned only.
-- **Font Size/Dyslexia Font:** Documented as planned only.
-- **Gamification (badges/level up):** Only visual/Excel, not interactive or tracked.
-- **Data Privacy/Security:** Documented as planned only.
-- **Customizable Plan Templates:** Documented as planned only.
-- **Advanced Analytics (trend lines, analytics export):** Documented as planned only.
-- **Wearables Integration:** Documented as planned only.
-- **Feedback Loop:** Documented as planned only.
+- **Advanced Analytics (trend lines, analytics export):** Planned.
+- **Wearables Integration:** Planned.
+- **Feedback Loop:** Planned.
+- **Further Accessibility Polish:** Planned.
+- **Gamification Enhancements:** Planned.
+- **Privacy/Export Options:** Planned.
 
 See the tool's README for details on each feature and how to use them. For planned features, refer to the documentation and Macros & Instructions sheet for future updates.
 
