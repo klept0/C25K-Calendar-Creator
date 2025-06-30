@@ -37,8 +37,8 @@ def export_qr_code(plan, user, outdir):
     md_path = os.path.join(outdir, "C25K_QR_Code.md")
     alt_text = f"QR code for C25K plan for {user['name']} (goal: {user.get('goal','')})"
     with open(md_path, "w", encoding="utf-8") as f:
-        f.write(f"# C25K Plan QR Code\n\n")
+        f.write("# C25K Plan QR Code\n\n")
         f.write(f"![{alt_text}](C25K_QR_Code.png)\n\n")
-        f.write(f"**Plan summary:**\n\n")
+        f.write("**Plan summary:**\n\n")
         f.write(f"{summary}\n")
     print(f"Markdown file with QR code and summary saved as '{md_path}'.")
