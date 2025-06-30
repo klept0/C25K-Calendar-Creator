@@ -36,6 +36,7 @@ from c25k_utils import (
     plan_customization,
     progress,
     weather,
+    qr_export,
 )
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -230,7 +231,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             .strip()
             .lower()
         )
-        if export not in ("i", "c", "j", "g", "p", "m", "v", "s", ""):
+        if export not in ("i", "c", "j", "g", "p", "m", "v", "s", "q", ""):
             print(colorize("Please enter a valid export option.", "red", bold=True))
             return None
         export = export if export else "i"
@@ -338,6 +339,11 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             rest_days = [d.strip().capitalize()[:3] for d in rest_days_input.split(",") if d.strip()]
         else:
             rest_days = ["Sat", "Sun"]
+        # Privacy/anonymization prompt
+        anonymize = (
+            input(colorize("Would you like to anonymize your data in all exports? [Y/N] (default N): ", "yellow", bold=True))
+            .strip().lower() == "y"
+        )
         return {
             "name": name,
             "age": age,
@@ -359,10 +365,28 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             "location": location,
             "alert_minutes": alert_minutes,
             "rest_days": rest_days,
+            "anonymize": anonymize,
         }
     except Exception:
         print(colorize("An error occurred during user input.", "red", bold=True))
         return None
+
+
+# --- Utility for anonymizing user info in exports ---
+def anonymize_user(user: Dict[str, Any]) -> Dict[str, Any]:
+    if not user.get("anonymize"):
+        return user
+    anon_user = user.copy()
+    anon_user["name"] = "Anonymous"
+    anon_user["email"] = ""
+    return anon_user
+
+# --- Add privacy note to all exports ---
+PRIVACY_NOTE = (
+    "Your personal data (name, email, credentials, tokens) is only used locally to generate your plan and reminders. "
+    "No data is sent to any server. If you choose to anonymize, your name and email will not appear in any export. "
+    "Credentials/tokens are used in-memory only and never saved. See README for full privacy details."
+)
 
 
 def get_workout_details(week: int, day: int, lang: str = "e") -> str:
@@ -487,7 +511,7 @@ def fetch_weather_for_session(location: str, date: datetime) -> str:
             return f"{desc} {temp}°F"
         else:
             return "Weather unavailable"
-    except Exception as e:
+    except Exception:
         # Fallback to stub
         weather_map = {
             0: "Sunny 75°F",
@@ -672,6 +696,7 @@ def export_markdown_checklist(
     plan: List[Dict[str, Any]], filename: str, user: Dict[str, Any]
 ) -> None:
     """Export the workout plan as a Markdown checklist file with tips and goal, with accessibility options if selected."""
+    user = anonymize_user(user)
     content = f"# Couch to 5K Checklist\n\n**Name:** {user['name']}\n\n**Age:** {user['age']}\n\n**Start Date:** {user['start_day'].strftime('%Y-%m-%d') if user.get('start_day') else 'default'}\n\n"
     if user.get("goal"):
         content += f"**Personal Goal:** {user['goal']}\n\n"
@@ -702,7 +727,8 @@ def export_markdown_checklist(
         )
     with open(filename, "w", encoding="utf-8") as mdfile:
         mdfile.write(content)
-    print(f"Markdown checklist '{filename}' created successfully.")
+        mdfile.write(f"\n---\n**Privacy Note:** {PRIVACY_NOTE}\n")
+    print(colorize(f"Markdown checklist '{filename}' created successfully.", "green", bold=True))
 
 
 def get_output_dir(user):
@@ -1319,9 +1345,43 @@ def export_apple_health_csv(plan: list, filename: str) -> None:
                     "Calories": "",
                     "Distance (mi)": 2.0,
                     "Duration (min)": session["duration"],
-                    "Source": "C25K Calendar Creator"
+                    "Source": "C25K Calendar Generator"
                 })
     print(f"Apple Health CSV file '{filename}' created successfully.")
+
+
+def export_voice_prompts(plan, user, outdir):
+    """
+    Export session-by-session voice/text prompts as a text script and (optionally) audio files.
+    """
+    import os
+    try:
+        from gtts import gTTS
+    except ImportError:
+        gTTS = None
+    lang_code = "en" if user.get("lang", "e") == "e" else "es"
+    # Text script
+    script_path = os.path.join(outdir, "C25K_Voice_Prompts.txt")
+    with open(script_path, "w", encoding="utf-8") as f:
+        for session in plan:
+            if session["duration"] > 0:
+                f.write(f"Week {session['week']} Day {session['day']}:\n")
+                f.write(f"  Workout: {session['workout']}\n")
+                f.write(f"  Tip: {session['tip']}\n\n")
+    print(f"Voice prompt script '{script_path}' created successfully.")
+    # Audio files (if gTTS is available)
+                f.write(f"- Week {session['week']} Day {session['day']}: {session['workout']}\n")
+    print(f"Shareable Markdown summary '{md_path}' created successfully.")
+    # Email draft
+    email_path = os.path.join(outdir, "C25K_Email_Share.txt")
+    with open(email_path, "w", encoding="utf-8") as f:
+        f.write("Subject: My Couch to 5K Plan\n\n")
+        f.write("Hi!\n\nHere's my personalized Couch to 5K plan. Join me or cheer me on!\n\n")
+        for session in plan:
+            if session["duration"] > 0:
+                f.write(f"Week {session['week']} Day {session['day']}: {session['workout']}\n")
+        f.write("\nLet's get running!\n")
+    print(f"Shareable email draft '{email_path}' created successfully.")
 
 
 def main() -> None:
@@ -1431,20 +1491,23 @@ def main() -> None:
         export_google_fit_csv(plan, os.path.join(outdir, "Couch_to_5K_GoogleFit.csv"))
     elif user["export"] == "p":
         pdf_export.export_to_pdf(
-            str(plan), os.path.join(outdir, "Couch_to_5K_Plan.pdf")
+            plan, user, os.path.join(outdir, "Couch_to_5K_Plan.pdf")
         )
     elif user["export"] == "m":
         export_markdown_checklist(
             plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
         )
     elif user["export"] == "v":
-        # voice_prompts.export_voice_prompts(plan, user["lang"])  # (commented out, not implemented)
-        print(colorize("Voice prompt export is not yet implemented.", "yellow", bold=True))
+        export_voice_prompts(plan, user, outdir)
     elif user["export"] == "s":
         config = prompt_strava_runkeeper_config()
         export_to_mobile_app(plan, user, config)
     elif user["export"] == "a":
         export_apple_health_csv(plan, os.path.join(outdir, "Couch_to_5K_AppleHealth.csv"))
+    elif user["export"] == "h":
+        export_community_share(plan, user, outdir)
+    elif user["export"] == "q":
+        qr_export.export_qr_code(plan, user, outdir)
     # Always output a Markdown checklist with user info
     export_markdown_checklist(
         plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user

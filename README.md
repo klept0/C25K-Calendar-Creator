@@ -23,20 +23,20 @@ Random Things I Have Made - random ideas that may not be 100%
 - **Reminders:** Real email reminders for each session are now supported. Configure your SMTP server at the prompt or via environment variables. See the tool README for setup instructions.
 - **Mobile App Export:** Real Strava/Runkeeper export is now supported. Enter your API token at the prompt to upload your plan. See the tool README for setup instructions.
 - **Apple Health Export:** Apple Health CSV export is now supported. Import the CSV into Apple Health using Shortcuts or a 3rd-party app. See the tool README for setup instructions.
+- **Voice Prompts Export:** Voice/text prompt export is now supported. Generates a text script and (optionally) audio files for each session. See the tool README for setup instructions.
 - **Output Directory Logic:** All exports are saved in a user-specific folder inside the project.
-- **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel, Apple Health CSV.
+- **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel, Apple Health CSV, Voice Prompts.
 - **Markdown Checklist Export:** Always generated with user info and notes.
 - **Colorized CLI Prompts and Feedback:** For a more user-friendly experience.
+- **Weather Suggestions:** Real, actionable weather suggestions for your first workout are now provided using live forecast data. Enter your city or ZIP at the prompt to get advice (e.g., "Great weather for running!", "Rain expected, consider rescheduling or wear a rain jacket").
+- **QR Code Export:** Instantly generate a QR code image containing a detailed summary of your C25K plan (all workouts/tips, not just a short string). The QR code is large and high-contrast if accessibility options are enabled, and a Markdown file is generated with the QR code and full plan summary for easy sharing and accessibility. Requires the `qrcode` Python package (`pip install qrcode[pil]`).
+- **PDF Export:** Visually rich, accessible PDF export is now fully supported. The PDF includes a cover page, full plan table, accessibility options, motivational quotes, resource links, and privacy note. Requires the `reportlab` Python package (`pip install reportlab`).
 
 </details>
 
 <details>
 <summary>Planned / Placeholder / Stub Features</summary>
 
-- **Weather Suggestions:** Weather integration is a stub (no real API call).
-- **QR Code Export:** Documented as planned only.
-- **PDF Export:** PDF export is a stub (calls a module, may not be fully implemented).
-- **Voice Prompts:** Voice/text prompt export is a stub.
 - **Community/Sharing:** Sharing via email is a stub.
 - **In-app FAQ/Help:** Documented as planned only.
 - **Font Size/Dyslexia Font:** Documented as planned only.

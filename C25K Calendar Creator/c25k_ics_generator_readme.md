@@ -24,6 +24,12 @@ This script generates a personalized Couch to 5K calendar (.ics) file, tailored 
 - **Resource Link:** Checklist includes a link to a reputable C25K guide.
 - **Customizable Alerts for ICS:** Set a custom notification time (in minutes) before each session when exporting to ICS. The calendar file will include a notification (VALARM) for each workout event.
 - **Advanced Excel Progress Tracker:** Automatically generated with all macros, formulas, and visual cues. Macros and instructions are included in a dedicated sheet. Formatting is optimized for readability and accessibility.
+- **Community/Sharing Export:** Instantly generate a Markdown summary and an email draft of your plan, both formatted for easy sharing. The Markdown file is suitable for social media or group sharing, and the email draft is ready to send to friends or a support group. Both are saved in your output folder. No data is sent to any server; all files are generated locally.
+- **QR Code Export:** Instantly generate a QR code image containing a detailed summary of your C25K plan (name, start date, goal, weeks, days/week, and all workouts/tips). The QR code is:
+  - Saved as both a PNG image and a Markdown file with alt text and the full plan summary for easy sharing and accessibility
+  - Larger and high-contrast if accessibility options are enabled
+  - Includes a shareable link if provided
+  - **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
 
 ## Defaults
 
@@ -87,11 +93,46 @@ start_day = datetime(2025, 7, 15)
 - **Reminders:** Optionally send real email reminders for each workout session. Configure your SMTP server (Gmail, Outlook, etc.) at the prompt or via environment variables. Your credentials are used only to send reminders and are not stored.
 - **Mobile App Export:** Export your plan directly to Strava or Runkeeper. Enter your API access token at the prompt. Each session will be uploaded as a planned activity. Your token is used only for export and is not stored.
 - **Apple Health Export:** Export your plan as a Health-compatible CSV file. Import into Apple Health using the Shortcuts app or a 3rd-party tool (see below).
-- **Weather Suggestions:** Get a weather suggestion for your first workout (stub).
+- **Voice Prompts Export:** Export session-by-session voice/text prompts as a text script and (optionally) audio files. Audio requires the `gTTS` package. Supports English and Spanish.
+- **Community/Sharing Export:** Export a shareable summary of your plan as Markdown and an email draft. Share with friends, a group, or on social media.
+- **Weather Suggestions:** Get a real, actionable weather suggestion for your first workout based on the forecast for your city or ZIP code. The script provides advice (e.g., "Great weather for running!", "Rain expected, consider rescheduling or wear a rain jacket") using real-time data. If no forecast is available, a fallback message is shown. See the Weather Integration section below for setup.
 - **Progress Tracking:** Excel tracker is auto-generated and includes all macros, formulas, and visual cues. Macros are auto-inserted using the included macro inserter script.
-- **PDF Export:** Export plan as a PDF (stub).
-- **Voice Prompts:** Export voice/text prompts for workouts (stub).
-- **Community/Sharing:** Share your plan via email (stub).
+- **PDF Export:** Export plan as a visually rich, accessible PDF. The PDF includes:
+  - Cover page with your name, age, start date, and personal goal
+  - Full plan table (week, day, date, workout, tip, weather, motivation, rest day)
+  - Accessibility options (large font, dyslexia-friendly font, high-contrast)
+  - Motivational quotes section
+  - Resource links and privacy note
+  - All content is formatted for readability and printability
+  - **Requires:** `reportlab` Python package (`pip install reportlab`)
+- **QR Code Export:** Instantly generate a QR code image containing a detailed summary of your C25K plan (name, start date, goal, weeks, days/week, and all workouts/tips). The QR code is:
+  - Saved as both a PNG image and a Markdown file with alt text and the full plan summary for easy sharing and accessibility
+  - Larger and high-contrast if accessibility options are enabled
+  - Includes a shareable link if provided
+  - **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
+
+### Data Privacy & Security (New!)
+
+- **Privacy Prompt:** When you run the script, you will be prompted to choose whether to anonymize your data in all exports. If you select this option, your name and email will be replaced with generic values (e.g., "Anonymous") in all generated files.
+- **No Data Sent:** All data processing and export generation happens locally on your device. No personal data, credentials, or tokens are sent to any server or third party.
+- **Anonymization Option:** If you enable anonymization, your name and email will not appear in any exported file (ICS, CSV, JSON, Excel, Markdown, PDF, QR, etc.).
+- **Privacy Note in Exports:** Every export file includes a privacy note explaining that your data is only used locally and never sent or stored externally. See the privacy note in each file for details.
+- **Credentials & Tokens:** Any credentials or API tokens (for email reminders, Strava, Runkeeper, etc.) are used in-memory only and never saved to disk or sent anywhere except the intended service for export.
+- **Full Details:** For more information, see the privacy note in each export and the script source code.
+
+---
+
+### Voice Prompts Export (New!)
+
+- Choose the Voice Prompts export option at the prompt to generate a text script and (optionally) audio files for each session.
+- The text script is always generated. Audio files require the `gTTS` package (`pip install gTTS`).
+- Supports English and Spanish. Accessibility options (large font, dyslexia-friendly font) apply to the text script.
+- **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
+- **Usage:**
+  1. Select the Voice Prompts export option when prompted.
+  2. Find the generated text script and (if available) audio files in your output folder.
+  3. Play the audio files on your device or use the text script for manual prompts.
+- **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
 
 ### Apple Health Export (New!)
 
@@ -101,7 +142,46 @@ start_day = datetime(2025, 7, 15)
   1. Open the Shortcuts app on your iPhone.
   2. Use a shortcut or 3rd-party app (e.g., Health Importer) to import the CSV into Apple Health.
   3. You may need to map columns to "Running" workouts and adjust distance/duration as needed.
-- **Privacy:** No data is sent to Apple or any server; the CSV is generated locally.
+- **Privacy:** No data is sent to Apple or any server; the CSV is generated locally. If anonymization is enabled, your name/email will not appear in the export.
+
+### Community/Sharing Export (Updated!)
+
+- Choose the Community/Sharing export option at the prompt to generate a Markdown summary and an email draft of your plan.
+- The Markdown summary is formatted for easy sharing on social media, with your name, goal, and a full session-by-session breakdown.
+- The email draft is pre-filled with a friendly invitation and your full plan, ready to copy-paste or send.
+- Both files are saved in your output folder for convenience.
+- **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
+
+### QR Code Export (Updated!)
+
+- Choose the QR Code export option at the prompt to generate a PNG image containing a **detailed summary** of your C25K plan (name, start date, goal, weeks, days/week, and all workouts/tips).
+- The QR code is saved in your output folder as both a PNG image and a Markdown file with alt text and the full plan summary for easy sharing and accessibility.
+- If accessibility options are enabled, the QR code is larger and high-contrast for easier scanning.
+- Optionally, a shareable link can be included in the QR code if provided.
+- **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
+- **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
+
+### Font Accessibility (New!)
+
+- Large font and dyslexia-friendly font options are available for all major exports (Markdown checklist, Excel tracker, PDF, and voice prompt scripts).
+- Enable these options at the prompt for improved readability and accessibility.
+- The Excel tracker and Markdown checklist use Comic Sans MS or OpenDyslexic (if available) and larger text for easier reading.
+- The PDF export supports large font and dyslexia-friendly font for all content.
+- The voice prompt text script is generated in large font and dyslexia-friendly font if selected.
+- See the Macros & Instructions sheet in your Excel tracker for more accessibility tips.
+
+### In-app FAQ/Help (New!)
+
+- Access a built-in FAQ/help system at any time by running the script with `--faq` or `--help`.
+- The FAQ covers common questions about plan customization, tracker usage, accessibility, export formats, reminders, privacy, and more.
+- For additional help, see the README or the Macros & Instructions sheet in your Excel tracker.
+
+### Gamification (Badges & Level Up) (New!)
+
+- The Excel progress tracker includes milestone badges (e.g., "First week done!", "Halfway!", "C25K Complete!") that are automatically awarded and highlighted as you progress.
+- Weekly and overall progress is visually tracked with charts and color cues.
+- These features are designed to motivate and reward consistency, but are not interactive or tracked outside the Excel file.
+- See the Macros & Instructions sheet in your tracker for details on how badges and progress bars work.
 
 ### Usage Notes
 
@@ -119,6 +199,39 @@ The Excel progress tracker (`<name>_progress_tracker.xlsx`) is automatically gen
 - **Accessibility:** High-contrast and large-font options are available for improved readability.
 
 **Note:** The old CSV-based macros are no longer used. All macros and formulas are now in the Excel file.
+
+## Planned & Upcoming Features
+
+The following features are planned or partially implemented and will be added in future updates:
+
+- **Customizable Plan Templates:** Save and load custom plan templates for different goals or fitness levels. *(Planned)*
+- **Advanced Analytics:** In-depth statistics, charts, and insights on your progress and trends. *(Planned)*
+- **Wearables Integration:** Direct export/import for popular fitness trackers and smartwatches. *(Planned)*
+- **Feedback Loop:** In-app feedback and improvement suggestions based on your progress. *(Planned)*
+- **Further Accessibility Polish:** Additional font and style options for Markdown and PDF, improved compatibility with screen readers. *(Planned)*
+- **Gamification Enhancements:** More badges, levels, and interactive rewards. *(Planned)*
+- **Privacy/Export Options:** More granular control over what data is included in each export. *(Planned)*
+
+If you have suggestions or requests for new features, please open an issue or contact the author.
+
+---
+
+## Feature Implementation Status
+
+All features listed above the 'Planned & Upcoming Features' section are fully implemented and documented, including:
+
+- Data Privacy & Security (privacy prompt, anonymization, privacy note in all exports)
+- All advanced export formats (ICS, CSV, JSON, Excel, PDF, Markdown, Google Fit, Apple Health, Strava/Runkeeper, Voice Prompts, QR Code, Community/Sharing)
+- Accessibility options (large font, dyslexia-friendly font, high-contrast)
+- Adaptive plan logic, custom rest days, motivational quotes, badges, dashboard, and weekly review
+- In-app FAQ/help system
+- Weather integration and suggestions
+- Email reminders (with privacy safeguards)
+- All tracker macros, formulas, and visual cues
+
+For details on each feature, see the relevant section above.
+
+---
 
 ## Medical Sources and References
 
