@@ -159,7 +159,6 @@ def get_user_info() -> Optional[Dict[str, Any]]:
                     colorize("Enter your weight (lbs): ", "magenta", bold=True)
                 ).strip()
             )
-            weight = weight * 0.453592  # Convert lbs to kg
         gender = input(
             colorize(
                 "Enter your gender ([M]ale/[F]emale): ",
@@ -343,6 +342,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             "name": name,
             "age": age,
             "weight": weight,
+            "weight_unit": unit,
             "gender": gender,
             "unit": unit,
             "hour": hour,
@@ -535,6 +535,11 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
     if not start_day:
         from datetime import datetime
         start_day = datetime(2025, 7, 15)
+    # Determine weight and threshold in correct units
+    weight = user["weight"]
+    weight_unit = user.get("weight_unit", "i")
+    weight_str = f"{weight:.1f} lbs" if weight_unit == "i" else f"{weight:.1f} kg"
+    weight_threshold = 220 if weight_unit == "i" else 100  # 220 lbs ≈ 100 kg
     for week in range(weeks):
         for day in range(days_per_week):
             day_offset = day * (7 // days_per_week)
@@ -549,7 +554,7 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
                 f"Follow the Couch to 5K plan - Week {week+1} session. "
                 f"Note: This plan is tailored for an adult {user['gender']} "
                 f"aged {user['age']} with hypertension. "
-                f"Weight: {user['weight']:.1f} kg. "
+                f"Weight: {weight_str}. "
                 f"Session time: {user['hour']:02d}:{user['minute']:02d}. "
                 "Please monitor your health and consult your doctor if needed.\n"
                 f"Workout: {workout}\n"
@@ -568,7 +573,7 @@ def get_workout_plan(user: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "date": session_date.strftime("%Y-%m-%d"),
                 }
             )
-    if user["age"] >= 60 or user["weight"] >= 100:
+    if user["age"] >= 60 or weight >= weight_threshold:
         for session in plan:
             session["duration"] = 25
             session["description"] += " (Reduced session duration for safety.)"
@@ -771,7 +776,10 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
     if not os.path.exists(filename):
         wb = Workbook()
         ws = wb.active
-        ws.title = "Progress"
+        if ws is None:
+            ws = wb.create_sheet(title="Progress")
+        else:
+            ws.title = "Progress"
         # Accessibility: set font size and font family if selected
         default_font_name = "Calibri"
         if user.get("dyslexia_font"):
@@ -781,11 +789,6 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             default_font_size = 14
         # Set default font for all cells (including new ones)
         ws.sheet_properties.tabColor = "1072BA"
-        for row in ws.iter_rows():
-            for cell in row:
-                cell.font = Font(name=default_font_name, size=default_font_size)
-        ws.parent.stylesheet.fonts[0].name = default_font_name
-        ws.parent.stylesheet.fonts[0].size = default_font_size
         columns = [
             "week",
             "day",
@@ -803,11 +806,10 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             "Health_Log",
         ]
         ws.append(columns)
-        # Center headings and set bold font
-        for col_idx, col in enumerate(columns, 1):
-            cell = ws.cell(row=1, column=col_idx)
+        # Set default font and alignment for header row (after append)
+        for cell in ws[1]:
+            cell.font = Font(name=default_font_name, size=default_font_size, bold=True)
             cell.alignment = Alignment(horizontal="center", vertical="center")
-            cell.font = Font(bold=True, name=default_font_name, size=default_font_size)
         # Motivational quotes list
         motivational_quotes = [
             "You are stronger than you think!",
@@ -846,14 +848,12 @@ def create_progress_tracker(user: Dict[str, Any], outdir: str) -> str:
             ws.append([
                 week, day, "", "", f"Workout: {workout}", "", "", "", "", "", weather_str, quote, "", ""
             ])
-            row = i
-            ws[f"D{row}"].number_format = "General"
+            # Set number format for the 'completed' column (D)
+            ws.cell(row=i, column=4).number_format = "General"
         # Auto-size columns to fit content
         for col_idx, col in enumerate(columns, 1):
             max_length = len(col)
-            for row in ws.iter_rows(
-                min_row=2, min_col=col_idx, max_col=col_idx, max_row=total_rows + 1
-            ):
+            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx, max_row=total_rows + 1):
                 for cell in row:
                     if cell.value:
                         max_length = max(max_length, len(str(cell.value)))
@@ -1347,26 +1347,55 @@ def main() -> None:
     )
     if use_template:
         available = list_templates()
-        if available:
-            print(colorize("Available templates:", "cyan", bold=True))
-            for i, t in enumerate(available, 1):
-                print(f"  {i}. {t}")
-            idx = input(colorize("Enter template number or name: ", "green", bold=True)).strip()
-            if idx.isdigit() and 1 <= int(idx) <= len(available):
-                template_name = available[int(idx) - 1]
-            else:
-                template_name = idx
-            template = load_template(template_name)
-            if template:
-                plan = template["plan"]
-                user = template["user"]
-                print(colorize(f"Loaded template '{template_name}'.", "green", bold=True))
-            else:
-                print(colorize("Falling back to default plan.", "yellow", bold=True))
-                plan = None
-                user = None
+        if not available:
+            print(colorize("[Error] No templates found. A default template will be created and used.", "red", bold=True))
+            # Create a default template if none exists
+            default_template_path = os.path.join(TEMPLATE_DIR, "default.json")
+            if not os.path.exists(default_template_path):
+                default_template = {
+                    "plan": [],
+                    "user": {
+                        "name": "Default User",
+                        "age": 30,
+                        "weight": 70,
+                        "gender": "other",
+                        "unit": "m",
+                        "hour": 7,
+                        "minute": 0,
+                        "lang": "e",
+                        "export": "i",
+                        "goal": "Complete Couch to 5K",
+                        "weeks": 10,
+                        "days_per_week": 3,
+                        "high_contrast": False,
+                        "large_font": False,
+                        "dyslexia_font": False,
+                        "start_day": None,
+                        "email": "",
+                        "location": "",
+                        "alert_minutes": 30,
+                        "rest_days": ["Sat", "Sun"],
+                        "anonymize": False
+                    }
+                }
+                with open(default_template_path, "w", encoding="utf-8") as f:
+                    json.dump(default_template, f, indent=2)
+            available = ["default"]
+        print(colorize("Available templates:", "cyan", bold=True))
+        for i, t in enumerate(available, 1):
+            print(f"  {i}. {t}")
+        idx = input(colorize("Enter template number or name: ", "green", bold=True)).strip()
+        if idx.isdigit() and 1 <= int(idx) <= len(available):
+            template_name = available[int(idx) - 1]
         else:
-            print(colorize("No templates found. Using default plan.", "yellow", bold=True))
+            template_name = idx if idx else "default"
+        template = load_template(template_name)
+        if template:
+            plan = template["plan"]
+            user = template["user"]
+            print(colorize(f"Loaded template '{template_name}'.", "green", bold=True))
+        else:
+            print(colorize(f"[Error] Template '{template_name}' could not be loaded. Falling back to user input.", "red", bold=True))
             plan = None
             user = None
     # If not loading a template, gather user info and generate plan as usual
