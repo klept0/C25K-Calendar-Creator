@@ -161,32 +161,16 @@ start_day = datetime(2025, 7, 15)
 - **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
 - **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
 
-### Font Accessibility (New!)
+## Accessibility Features
 
-- Large font and dyslexia-friendly font options are available for all major exports (Markdown checklist, Excel tracker, PDF, and voice prompt scripts).
-- Enable these options at the prompt for improved readability and accessibility.
-- The Excel tracker and Markdown checklist use Comic Sans MS or OpenDyslexic (if available) and larger text for easier reading.
-- The PDF export supports large font and dyslexia-friendly font for all content.
-- The voice prompt text script is generated in large font and dyslexia-friendly font if selected.
-- See the Macros & Instructions sheet in your Excel tracker for more accessibility tips.
+- **High-Contrast Mode:** Available for CLI, Markdown, Excel, and PDF exports. PDF and Markdown exports use high-contrast colors for improved visibility if selected.
+- **Large Font & Dyslexia-Friendly Font:** All major exports (Markdown checklist, Excel tracker, PDF, and voice prompt scripts) support large font and Comic Sans MS or OpenDyslexic (if available) for easier reading. Enable these options at the prompt.
+- **Semantic Structure & ARIA Roles:** Markdown export uses semantic headings and ARIA roles for better screen reader compatibility. Table headers and section headings are clearly marked in all exports.
+- **PDF Accessibility:** PDF export includes an explicit accessibility note at the top, semantic headings, and all font/contrast options. Note: PDF accessibility for screen readers is improved, but may be limited by your PDF reader—see the accessibility note in the PDF export for details.
+- **Screen Reader Compatibility:** Markdown and Excel exports are optimized for screen readers (avoid merged cells, clear headers, semantic structure). All accessibility features are documented in this README and in the Excel tracker’s "Macros & Instructions" sheet.
+- **Accessibility Documentation:** All accessibility features and options are described in this README and in the Excel tracker’s Macros & Instructions sheet.
 
-### In-app FAQ/Help (New!)
-
-- Access a built-in FAQ/help system at any time by running the script with `--faq` or `--help`.
-- The FAQ covers common questions about plan customization, tracker usage, accessibility, export formats, reminders, privacy, and more.
-- For additional help, see the README or the Macros & Instructions sheet in your Excel tracker.
-
-### Gamification (Badges & Level Up) (New!)
-
-- The Excel progress tracker includes milestone badges (e.g., "First week done!", "Halfway!", "C25K Complete!") that are automatically awarded and highlighted as you progress.
-- Weekly and overall progress is visually tracked with charts and color cues.
-- These features are designed to motivate and reward consistency, but are not interactive or tracked outside the Excel file.
-- See the Macros & Instructions sheet in your tracker for details on how badges and progress bars work.
-
-### Usage Notes
-
-- All advanced features are optional and can be accessed via prompts when running the script.
-- Stubs indicate features that can be extended with real integrations.
+---
 
 ## Excel Progress Tracker & Macros
 
@@ -253,3 +237,31 @@ All medical and health-related logic in this script is for informational purpose
 **License:** MIT
 
 **Tool README:** See `c25k_ics_generator_readme.md` in this folder for full usage, features, and advanced options.
+
+## Weather API Key Setup (OpenWeatherMap)
+
+To enable real weather suggestions for your workouts:
+
+1. Sign up for a free API key at [OpenWeatherMap](https://openweathermap.org/api).
+2. **Set your API key as an environment variable (recommended):**
+
+   For macOS/zsh users, add this line to your `~/.zshrc` file:
+   ```sh
+   export OWM_API_KEY="your_actual_api_key_here"
+   ```
+   Then reload your shell configuration:
+   ```sh
+   source ~/.zshrc
+   ```
+   Replace `your_actual_api_key_here` with your real OpenWeatherMap API key.
+
+   Alternatively, for a one-off run, you can set the variable inline:
+   ```sh
+   OWM_API_KEY="your_actual_api_key_here" python3 c25k_ics_generator.py
+   ```
+
+3. The script will automatically use the API key from the `OWM_API_KEY` environment variable. You do not need to type it in each time.
+
+4. If no API key is set, the tool will use a built-in weather stub for demo purposes.
+
+**Security note:** Never commit your API key to version control or share it in plaintext. Environment variables are only visible to your user and processes you run.

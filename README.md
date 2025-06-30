@@ -89,14 +89,28 @@ The tool defaults to imperial units and Fahrenheit for weather. You can change t
 This tool can fetch real weather forecasts for your session dates if you provide a city or ZIP code. To enable this feature:
 
 1. Sign up for a free API key at [OpenWeatherMap](https://openweathermap.org/api).
-2. Set your API key as an environment variable before running the script:
+2. **Set your API key as an environment variable (recommended for security and convenience):**
 
+   For macOS/zsh users, add this line to your `~/.zshrc` file:
    ```sh
-   export OWM_API_KEY=your_openweathermap_api_key
+   export OWM_API_KEY="your_actual_api_key_here"
    ```
-   Or, replace the placeholder in the code with your API key.
+   Then reload your shell configuration:
+   ```sh
+   source ~/.zshrc
+   ```
+   Replace `your_actual_api_key_here` with your real OpenWeatherMap API key.
 
-3. If no API key is set, the tool will use a built-in weather stub for demo purposes.
+   Alternatively, for a one-off run, you can set the variable inline:
+   ```sh
+   OWM_API_KEY="your_actual_api_key_here" python3 c25k_ics_generator.py
+   ```
+
+3. The script will automatically use the API key from the `OWM_API_KEY` environment variable. You do not need to type it in each time.
+
+4. If no API key is set, the tool will use a built-in weather stub for demo purposes.
+
+**Security note:** Never commit your API key to version control or share it in plaintext. Environment variables are only visible to your user and processes you run.
 
 See the code and documentation for more details.
 
@@ -110,3 +124,14 @@ See the code and documentation for more details.
 See the tool README for more details and troubleshooting tips.
 
 </details>
+
+---
+
+**Accessibility:**
+
+- High-contrast mode (CLI, Markdown, Excel, PDF)
+- Large font and dyslexia-friendly font options (Comic Sans MS or OpenDyslexic if available)
+- Semantic headings and ARIA roles in Markdown export
+- PDF export includes an explicit accessibility note, semantic headings, and high-contrast/large font/dyslexia-friendly font options
+- Screen reader compatibility: Markdown and Excel exports are optimized for screen readers (avoid merged cells, clear headers, semantic structure). PDF accessibility is improved but may be limited by PDF readers—see the accessibility note in the PDF export for details.
+- All accessibility features are documented in the README and in the Excel tracker’s "Macros & Instructions" sheet.

@@ -4,11 +4,11 @@ Handles printable PDF export of the plan.
 Fully implements visually rich, accessible PDF export using reportlab.
 """
 
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 )
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.units import inch
@@ -47,9 +47,19 @@ def export_to_pdf(plan, user, filename):
     styles.add(ParagraphStyle(name="Motivation", fontSize=font_size, fontName=font_name, textColor=colors.green, leading=font_size+2, leftIndent=12, italic=True))
     # High-contrast background (simulate with table background)
     bg_color = colors.black if high_contrast else colors.whitesmoke
-    fg_color = colors.yellow if high_contrast else colors.black
     # Build document
     elements = []
+    # Accessibility note (top of document)
+    accessibility_note = (
+        "<b>Accessibility Note:</b> This PDF is generated with accessibility in mind: "
+        "high-contrast mode, large font, and a dyslexia-friendly font option are available. "
+        "Headings and tables use semantic structure for easier navigation. "
+        "However, PDF accessibility for screen readers may be limited compared to HTML/Markdown exports. "
+        "For best results with screen readers, consider using the Markdown export. "
+        "If you need a different format, please contact the author."
+    )
+    elements.append(Paragraph(accessibility_note, styles["NormalBig"]))
+    elements.append(Spacer(1, 0.15*inch))
     # Cover/title
     elements.append(Paragraph("Couch to 5K Personalized Plan", styles["CenterTitle"]))
     elements.append(Spacer(1, 0.2*inch))
