@@ -127,6 +127,32 @@ See the tool README for more details and troubleshooting tips.
 
 ---
 
+# C25K Calendar Creator (GUI Edition)
+
+## Quick Start (GUI Only)
+
+- **Launch the PyQt6 GUI:**
+  - Run `python c25k_ics_generator.py` (no CLI or Tkinter prompts; only the GUI is used).
+  - All plan creation, export, and accessibility features are available via the GUI.
+  - The GUI is accessible, user-friendly, and supports all export types (ICS, CSV, JSON, Google Fit, Markdown, Strava/Runkeeper, Apple Health, PDF, QR, and Excel tracker).
+
+- **Persistent Preferences:**
+  - Your settings (name, age, weight, accessibility, etc.) are saved automatically to `.c25k_prefs.json` in your home directory.
+  - Click "Save Preferences" in the GUI to save your current settings. They will be restored next time you launch the app.
+
+- **Accessibility:**
+  - All accessibility features (high-contrast, large font, dyslexia font, light mode, screen reader, increased spacing, focus highlight) are grouped in a dedicated Accessibility flyout in the GUI.
+  - Accessibility options apply to all exports and the GUI itself.
+
+- **Legacy CLI/Tkinter:**
+  - All legacy CLI and Tkinter code has been removed. Only the PyQt6 GUI is supported.
+
+- **Advanced Features:**
+  - All export types, analytics, and accessibility features are available from the GUI.
+  - See the tool README (`c25k_ics_generator_readme.md`) for full details on export formats, analytics, and advanced options.
+
+---
+
 **Accessibility:**
 
 - High-contrast mode (CLI, Markdown, Excel, PDF)

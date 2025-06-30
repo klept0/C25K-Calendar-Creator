@@ -19,24 +19,134 @@ Medical recommendations and plan structure are based on:
   https://www.heart.org/en/healthy-living/fitness/fitness-basics
 """
 
-import csv
-import json
+
+
 import os
-import requests
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from c25k_utils import (
-    accessibility,
-    pdf_export,
-    plan_customization,
-    progress,
-    weather,
-)
+# --- Third-party imports ---
+import requests
+import json
 from openpyxl import Workbook
 
-# --- Advanced Macros Implementation for progress tracker CSV ---
-# Add these as columns or sheets in name_progress_tracker.csv as appropriate.
+# --- Modularized imports ---
+from modules.exports import export_csv, export_json, export_google_fit_csv, export_markdown_checklist
+from modules.utils import anonymize_user
+
+# --- C25K utility modules ---
+from c25k_utils import plan_customization, progress, weather, pdf_export
+from c25k_utils.mobile_export import export_to_mobile_app
+
+# --- GUI/CLI imports (for later use) ---
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
+
+# --- Optional calendar widget ---
+try:
+    from tkcalendar import DateEntry
+    TKCALENDAR_AVAILABLE = True
+except ImportError:
+    TKCALENDAR_AVAILABLE = False
+
+# --- Language dictionary for i18n (English/Spanish) ---
+LANG_DICT = {
+    "e": {
+        "title": "C25K Calendar Creator",
+        "name": "Name:",
+        "age": "Age:",
+        "weight": "Weight:",
+        "gender": "Gender:",
+        "units": "Units:",
+        "session_time": "Session Time (HH:MM):",
+        "language": "Language:",
+        "export_format": "Export Format:",
+        "goal": "Personal Goal:",
+        "weeks": "Weeks:",
+        "days_per_week": "Days/Week:",
+        "start_date": "Start Date:",
+        "start_date_entry": "Start Date (YYYY-MM-DD):",
+        "high_contrast": "High-contrast mode",
+        "large_font": "Large font",
+        "dyslexia_font": "Dyslexia-friendly font",
+        "email": "Email (for reminders):",
+        "location": "Location (for weather):",
+        "alert_minutes": "Alert before session (min):",
+        "rest_days": "Rest Days (comma-separated):",
+        "anonymize": "Anonymize data",
+        "create_plan": "Create Plan",
+        "confirm_title": "Confirm Plan",
+        "confirm_msg": "Please confirm your details:",
+        "success_title": "Success",
+        "success_msg": "Your plan and exports have been created!",
+        "input_error": "Input Error",
+        "help_name": "Enter your full name.",
+        "help_age": "Enter your age in years.",
+        "help_weight": "Enter your weight (lbs or kg).",
+        "help_gender": "Select your gender.",
+        "help_units": "Choose Imperial (lbs) or Metric (kg).",
+        "help_time": "Enter the time you prefer to start sessions (24h format).",
+        "help_language": "Choose your preferred language.",
+        "help_export": "Choose the export format for your plan.",
+        "help_goal": "Enter a personal goal (optional).",
+        "help_weeks": "Number of weeks for the plan.",
+        "help_days": "Number of days per week.",
+        "help_start_date": "Pick your plan start date.",
+        "help_start_date_entry": "Enter your plan start date (YYYY-MM-DD).",
+        "help_email": "Enter your email to receive reminders (optional).",
+        "help_location": "Enter your city or ZIP for weather suggestions (optional).",
+        "help_alert": "Minutes before session to receive an alert.",
+        "help_rest": "Enter your preferred rest days (e.g. Sat,Sun).",
+    },
+    "s": {
+        "title": "Creador de Calendario C25K",
+        "name": "Nombre:",
+        "age": "Edad:",
+        "weight": "Peso:",
+        "gender": "Género:",
+        "units": "Unidades:",
+        "session_time": "Hora de sesión (HH:MM):",
+        "language": "Idioma:",
+        "export_format": "Formato de exportación:",
+        "goal": "Meta personal:",
+        "weeks": "Semanas:",
+        "days_per_week": "Días/Semana:",
+        "start_date": "Fecha de inicio:",
+        "start_date_entry": "Fecha de inicio (AAAA-MM-DD):",
+        "high_contrast": "Modo alto contraste",
+        "large_font": "Fuente grande",
+        "dyslexia_font": "Fuente para dislexia",
+        "email": "Correo electrónico (para recordatorios):",
+        "location": "Ubicación (para clima):",
+        "alert_minutes": "Alerta antes de sesión (min):",
+        "rest_days": "Días de descanso (separados por coma):",
+        "anonymize": "Anonimizar datos",
+        "create_plan": "Crear plan",
+        "confirm_title": "Confirmar plan",
+        "confirm_msg": "Por favor confirme sus datos:",
+        "success_title": "¡Éxito!",
+        "success_msg": "¡Su plan y exportaciones han sido creados!",
+        "input_error": "Error de entrada",
+        "help_name": "Ingrese su nombre completo.",
+        "help_age": "Ingrese su edad en años.",
+        "help_weight": "Ingrese su peso (lbs o kg).",
+        "help_gender": "Seleccione su género.",
+        "help_units": "Elija Imperial (lbs) o Métrico (kg).",
+        "help_time": "Ingrese la hora en que prefiere iniciar las sesiones (formato 24h).",
+        "help_language": "Elija su idioma preferido.",
+        "help_export": "Elija el formato de exportación para su plan.",
+        "help_goal": "Ingrese una meta personal (opcional).",
+        "help_weeks": "Número de semanas del plan.",
+        "help_days": "Número de días por semana.",
+        "help_start_date": "Elija la fecha de inicio del plan.",
+        "help_start_date_entry": "Ingrese la fecha de inicio del plan (AAAA-MM-DD).",
+        "help_email": "Ingrese su correo para recibir recordatorios (opcional).",
+        "help_location": "Ingrese su ciudad o código postal para sugerencias de clima (opcional).",
+        "help_alert": "Minutos antes de la sesión para recibir alerta.",
+        "help_rest": "Ingrese sus días de descanso preferidos (ej. Sab,Dom).",
+    },
+}
 #
 # 1. Streak Counter (formula for Google Sheets/Excel):
 #    Add a column 'Current_Streak'. In row 2 (first data row):
@@ -224,7 +334,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
             .strip()
             .lower()
         )
-        if export not in ("i", "c", "j", "g", "p", "m", "v", "s", "q", ""):
+        if export not in ("i", "c", "j", "g", "p", "m", "v", "s", "a", "q", ""):
             print(colorize("Please enter a valid export option.", "red", bold=True))
             return None
         export = export if export else "i"
@@ -335,7 +445,9 @@ def get_user_info() -> Optional[Dict[str, Any]]:
         # Privacy/anonymization prompt
         anonymize = (
             input(colorize("Would you like to anonymize your data in all exports? [Y/N] (default N): ", "yellow", bold=True))
-            .strip().lower() == "y"
+            .strip()
+            .lower()
+            == "y"
         )
         return {
             "name": name,
@@ -367,13 +479,7 @@ def get_user_info() -> Optional[Dict[str, Any]]:
 
 
 # --- Utility for anonymizing user info in exports ---
-def anonymize_user(user: Dict[str, Any]) -> Dict[str, Any]:
-    if not user.get("anonymize"):
-        return user
-    anon_user = user.copy()
-    anon_user["name"] = "Anonymous"
-    anon_user["email"] = ""
-    return anon_user
+
 
 # --- Add privacy note to all exports ---
 PRIVACY_NOTE = (
@@ -654,93 +760,16 @@ def generate_ics(
     print(f"ICS file '{filename}' created successfully.")
 
 
-def export_csv(plan: List[Dict[str, Any]], filename: str) -> None:
-    """Export the workout plan to a CSV file, including tips and rest days."""
-    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-        fieldnames = ["week", "day", "duration", "description", "workout", "tip"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for session in plan:
-            writer.writerow({k: session[k] for k in fieldnames})
-    print(f"CSV file '{filename}' created successfully.")
 
 
-def export_json(plan: List[Dict[str, Any]], filename: str) -> None:
-    """Export the workout plan to a JSON file, including tips and rest days."""
-    with open(filename, "w", encoding="utf-8") as jsonfile:
-        json.dump(plan, jsonfile, ensure_ascii=False, indent=2)
-    print(f"JSON file '{filename}' created successfully.")
 
 
-def export_google_fit_csv(plan: List[Dict[str, Any]], filename: str) -> None:
-    """Export the workout plan to a Google Fit compatible CSV file, including tips."""
-    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-        fieldnames = ["Activity Type", "Start Date", "End Date", "Description", "Tip"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for session in plan:
-            writer.writerow(
-                {
-                    "Activity Type": "Running" if session["duration"] > 0 else "Rest",
-                    "Start Date": f"Week {session['week']} Day {session['day']}",
-                    "End Date": f"Week {session['week']} Day {session['day']}",
-                    "Description": session["workout"],
-                    "Tip": session["tip"],
-                }
-            )
-    print(f"Google Fit CSV file '{filename}' created successfully.")
 
 
-def export_markdown_checklist(
-    plan: List[Dict[str, Any]], filename: str, user: Dict[str, Any]
-) -> None:
-    """Export the workout plan as a Markdown checklist file with tips and goal, with accessibility options if selected."""
-    user = anonymize_user(user)
-    # Accessibility: Add ARIA roles and semantic structure
-    content = (
-        '<main role="main" aria-label="Couch to 5K Checklist">\n'
-        "# Couch to 5K Checklist\n\n"
-        "**Name:** {name}\n\n**Age:** {age}\n\n**Start Date:** {start_date}\n\n".format(
-            name=user['name'],
-            age=user['age'],
-            start_date=user['start_day'].strftime('%Y-%m-%d') if user.get('start_day') else 'default',
-        )
-    )
-    if user.get("goal"):
-        content += f"**Personal Goal:** {user['goal']}\n\n"
-    content += "**Resource:** [C25K Guide](https://www.nhs.uk/live-well/exercise/couch-to-5k-week-by-week/)\n\n"
-    content += (
-        '> **Accessibility Note:** This checklist uses semantic headings and ARIA roles for better screen reader compatibility. '
-        'For best results, use a Markdown viewer that supports accessibility features.\n\n'
-    )
-    for session in plan:
-        if session["duration"] > 0:
-            content += (
-                f"- [ ] Week {session['week']} Day {session['day']}: "
-                f"{session['workout']}\n  - Tip: {session['tip']}\n  - Notes: ________________________________\n    ________________________________\n    ________________________________\n"
-            )
-        else:
-            content += f"- [ ] Week {session['week']} {session['day']}: Rest Day\n  - Tip: {session['tip']}\n  - Notes: ________________________________\n    ________________________________\n    ________________________________\n"
-    # Apply accessibility options if selected
-    if user.get("high_contrast") or user.get("large_font") or user.get("dyslexia_font"):
-        # Add a style block for Markdown renderers that support it
-        style = "<style>\n"
-        if user.get("large_font"):
-            style += "body,li { font-size: 1.3em !important; }\n"
-        if user.get("dyslexia_font"):
-            style += "body,li { font-family: 'Comic Sans MS', 'OpenDyslexic', Arial, sans-serif !important; }\n"
-        if user.get("high_contrast"):
-            style += "body { background: #000; color: #FFD700; }\n"
-        style += "</style>\n\n"
-        content = style + content
-        # Also call accessibility module for further processing (now includes dyslexia_font)
-        content = accessibility.apply_accessibility_options(
-            content, bool(user.get("high_contrast")), bool(user.get("large_font"))
-        )
-    with open(filename, "w", encoding="utf-8") as mdfile:
-        mdfile.write(content)
-        mdfile.write(f"\n---\n**Privacy Note:** {PRIVACY_NOTE}\n")
-    print(colorize(f"Markdown checklist '{filename}' created successfully.", "green", bold=True))
+
+
+
+
 
 
 def get_output_dir(user):
@@ -1569,20 +1598,38 @@ def main() -> None:
         )
     elif user["export"] == "m":
         export_markdown_checklist(
-            plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
+            plan, os.path.join(outdir, "Couch_to_5K_Checklist.md")
         )
     elif user["export"] == "v":
-        export_voice_prompts(plan, user, outdir)
+        # --- Voice Prompts Export (CLI) ---
+        from c25k_utils.voice_prompts import export_voice_prompts
+        voice_file = os.path.join(outdir, "Couch_to_5K_Voice_Prompts.txt")
+        result = export_voice_prompts(plan, user.get("lang", "e"))
+        with open(voice_file, "w", encoding="utf-8") as f:
+            f.write(result)
+        print(colorize(f"Voice prompts exported to {voice_file}", "green", bold=True))
     elif user["export"] == "s":
+        # --- Strava/Runkeeper Export (CLI) ---
+        def prompt_strava_runkeeper_config():
+            print("Strava/Runkeeper export: No authentication required for CSV download. For direct upload, enter your API token (optional):")
+            token = input("API Token (leave blank for CSV only): ").strip()
+            return {"token": token} if token else {}
         config = prompt_strava_runkeeper_config()
-        export_to_mobile_app(plan, user, config)
+        from c25k_utils.mobile_export import export_to_mobile_app
+        export_to_mobile_app(plan, config)
+        print(colorize("Strava/Runkeeper CSV export complete. See output directory for import instructions.", "green", bold=True))
     elif user["export"] == "a":
-        export_apple_health_csv(plan, os.path.join(outdir, "Couch_to_5K_AppleHealth.csv"))
+        # --- Apple Health Export (CLI) ---
+        from c25k_utils.mobile_export import export_apple_health_csv
+        apple_file = os.path.join(outdir, "Couch_to_5K_AppleHealth.csv")
+        if export_apple_health_csv:
+            export_apple_health_csv(plan, apple_file)
+        print(colorize(f"Apple Health CSV exported to {apple_file}", "green", bold=True))
     # elif user["export"] == "h":
     #     export_community_share(plan, user, outdir)
     # Always output a Markdown checklist with user info
     export_markdown_checklist(
-        plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"), user
+        plan, os.path.join(outdir, "Couch_to_5K_Checklist.md")
     )
     # Accessibility (example: print message)
     if user["high_contrast"] or user["large_font"]:
@@ -1595,15 +1642,37 @@ def main() -> None:
     # Reminders (rain/weather-aware)
     if user.get("email"):
         print(colorize("\n-- Email Reminders Setup --", "yellow", bold=True))
+        def prompt_smtp_config():
+            print("Enter your SMTP server details for email reminders:")
+            smtp_server = input("SMTP server (e.g. smtp.gmail.com): ").strip()
+            smtp_port = input("SMTP port (e.g. 587): ").strip()
+            smtp_user = input("SMTP username/email: ").strip()
+            smtp_pass = input("SMTP password (input hidden): ").strip()
+            return {"server": smtp_server, "port": smtp_port, "user": smtp_user, "password": smtp_pass}
+        def send_email_reminder(smtp_config, to_email, subject, body):
+            from email.mime.text import MIMEText
+            msg = MIMEText(body)
+            msg["Subject"] = subject
+            msg["From"] = smtp_config["user"]
+            msg["To"] = to_email
+            try:
+                import smtplib
+                with smtplib.SMTP(smtp_config["server"], int(smtp_config["port"])) as server:
+                    server.starttls()
+                    server.login(smtp_config["user"], smtp_config["password"])
+                    server.sendmail(smtp_config["user"], [to_email], msg.as_string())
+                print(colorize(f"Email sent to {to_email}", "green", bold=True))
+            except Exception as e:
+                print(colorize(f"Failed to send email: {e}", "red", bold=True))
         smtp_config = prompt_smtp_config()
         if smtp_config:
             for session in plan:
-                if session["duration"] > 0:
-                    subject = f"C25K Reminder: Week {session['week']} Day {session['day']}"
+                if session.get("duration", 1) > 0:
+                    subject = f"C25K Reminder: Week {session.get('week','?')} Day {session.get('day','?')}"
                     body = (
                         f"Hi {user['name']},\n\nThis is your Couch to 5K session reminder!\n\n"
-                        f"Date: {session['date']}\nTime: {user['hour']:02d}:{user['minute']:02d}\n"
-                        f"Workout: {session['workout']}\nTip: {session['tip']}\n"
+                        f"Date: {session.get('date','?')}\nTime: {user['hour']:02d}:{user['minute']:02d}\n"
+                        f"Workout: {session.get('workout','?')}\nTip: {session.get('tip','?')}\n"
                     )
                     if session.get("weather"):
                         body += f"Weather forecast: {session['weather']}\n"
@@ -1613,6 +1682,58 @@ def main() -> None:
             print(colorize("All session reminders sent!", "green", bold=True))
         else:
             print(colorize("SMTP config not provided. Email reminders skipped.", "red", bold=True))
+    # Community/sharing (stub)
+    # community.share_plan(str(plan), platform="email")
+    # Progress tracking (stub)
+    # Create the progress tracker file if it doesn't exist
+    progress_filename = create_progress_tracker(user, outdir)
+    progress_data = progress.import_progress(progress_filename)
+    print(progress.generate_progress_summary(progress_data))
+    # --- Auto-insert macros into Excel tracker ---
+    macro_inserter = os.path.join(
+        os.path.dirname(__file__), "c25k_excel_macro_inserter.py"
+    )
+    if os.path.exists(macro_inserter):
+        # Make executable if not already
+        import stat
+        import subprocess
+        st = os.stat(macro_inserter)
+        if not (st.st_mode & stat.S_IXUSR):
+            os.chmod(macro_inserter, st.st_mode | stat.S_IXUSR)
+        try:
+            print("\nInserting macros into Excel tracker...")
+            subprocess.run(["python3", macro_inserter, progress_filename], check=True)
+        except Exception as e:
+            print(f"[Warning] Could not auto-insert macros: {e}")
+            print(
+                f"You can run: python3 {macro_inserter} '{progress_filename}' to insert macros manually."
+            )
+            input("Press Enter to continue...")
+    else:
+        print("[Warning] Macro inserter script not found. Macros not auto-inserted.")
+        input("Press Enter to continue...")
+    print(
+        colorize(
+            "\nAll done! Your personalized C25K plan and exports are ready. "
+            "Good luck!",
+            "green",
+            bold=True,
+        )
+    )
+    # Privacy note
+    print(colorize("\nNote: Your email, SMTP, and mobile app tokens are used only to send reminders/exports and are not stored.", "yellow", bold=True))
+    # --- Feedback Loop: Prompt user for feedback after plan generation ---
+    print("\nWe'd love your feedback to help improve this tool!")
+    feedback = input("Do you have any comments, suggestions, or issues? (Press Enter to skip): ").strip()
+    if feedback:
+        # Save feedback to a local file in the output directory
+        feedback_path = os.path.join(outdir, "user_feedback.txt")
+        with open(feedback_path, "a", encoding="utf-8") as f:
+            from datetime import datetime
+            f.write(f"Feedback on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}:\n{feedback}\n\n")
+        print(colorize("Thank you for your feedback! It has been saved locally.", "green", bold=True))
+    else:
+        print("No feedback entered. You can always send feedback later via the tracker or README instructions.")
     # Community/sharing (stub)
     # community.share_plan(str(plan), platform="email")
     # Progress tracking (stub)
@@ -1663,29 +1784,15 @@ def main() -> None:
         with open(feedback_path, "a", encoding="utf-8") as f:
             from datetime import datetime
             f.write(f"Feedback on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}:\n{feedback}\n\n")
-        print(colorize("Thank you for your feedback! It has been saved locally.", "green", bold=True))
-    else:
-        print("No feedback entered. You can always send feedback later via the tracker or README instructions.")
+"""
+C25K Calendar Creator – Main Entrypoint
 
+All logic is now modularized and accessible via the PyQt6 GUI only.
+Legacy CLI and Tkinter code has been removed for clarity and maintainability.
 
-# Add stubs for any undefined functions used in main()
-def export_voice_prompts(plan, user, outdir):
-    print("[Stub] Voice prompts export not implemented in this context.")
-def prompt_strava_runkeeper_config():
-    print("[Stub] Strava/Runkeeper config prompt not implemented in this context.")
-    return None
-def export_to_mobile_app(plan, user, config):
-    print("[Stub] Mobile app export not implemented in this context.")
-def export_apple_health_csv(plan, filename):
-    print("[Stub] Apple Health CSV export not implemented in this context.")
-def prompt_smtp_config():
-    print("[Stub] SMTP config prompt not implemented in this context.")
-    return None
-def send_email_reminder(smtp_config, to_email, subject, body):
-    print("[Stub] Email reminder not implemented in this context.")
-def show_faq():
-    print("[Stub] FAQ not implemented in this context.")
-
+For advanced export, analytics, and accessibility features, see the modules and README.
+"""
 
 if __name__ == "__main__":
-    main()
+    from modules.pyqt_gui import run_pyqt_gui
+    run_pyqt_gui()

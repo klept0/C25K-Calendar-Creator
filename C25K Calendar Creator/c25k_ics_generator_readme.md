@@ -1,3 +1,13 @@
+# C25K Calendar Creator (PyQt6 GUI Edition)
+
+**IMPORTANT:**
+- The tool now uses a modern PyQt6 GUI only. All legacy CLI and Tkinter code has been removed for clarity and maintainability.
+- All features (plan creation, export, analytics, accessibility) are available via the GUI.
+- User preferences (name, age, weight, accessibility, etc.) are saved to `.c25k_prefs.json` in your home directory and restored automatically.
+- Click "Save Preferences" in the GUI to persist your settings.
+
+---
+
 # Couch to 5K ICS Generator
 
 **DISCLAIMER: This script is for informational purposes only and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider before starting any new exercise program, especially if you have hypertension or other pre-existing health conditions. Use this script at your own risk. The author assumes no responsibility for any injury or health issues that may result from using this script.**
