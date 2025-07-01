@@ -1,7 +1,0 @@
-# Requirements for Couch to 5K ICS Generator
-# Standard library only, except for the following:
-requests>=2.0.0
-qrcode[pil]>=7.0.0  # For QR code export
-reportlab>=4.0.0  # For PDF export
-openpyxl>=3.1.0  # For Excel export and macros
-
