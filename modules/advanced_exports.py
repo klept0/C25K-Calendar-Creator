@@ -1,0 +1,519 @@
+"""
+Advanced export functionality for QR codes and PDF generation.
+Extends the basic export capabilities with visual and shareable formats.
+"""
+
+import json
+import qrcode
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+from qrcode.image.styles.colormasks import SquareGradiantColorMask
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from typing import Any, Dict, List
+import io
+import base64
+
+
+class QRCodeGenerator:
+    """Generate QR codes for C25K training plans"""
+    
+    def __init__(self):
+        self.qr_cache = {}
+    
+    def generate_plan_qr(self, plan_data: Dict[str, Any], format_type: str = "url") -> str:
+        """
+        Generate QR code for training plan.
+        
+        Args:
+            plan_data: Complete training plan data
+            format_type: 'url', 'json', or 'summary'
+        
+        Returns:
+            Base64 encoded QR code image
+        """
+        try:
+            if format_type == "url":
+                # Generate a shareable URL (would be actual URL in production)
+                plan_id = self._generate_plan_id(plan_data)
+                qr_data = f"https://c25k-app.com/plan/{plan_id}"
+            elif format_type == "json":
+                # Embed complete plan data (size limited)
+                qr_data = json.dumps(self._compress_plan_data(plan_data))
+            else:  # summary
+                qr_data = self._generate_plan_summary(plan_data)
+            
+            # Create QR code with custom styling
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_data)
+            qr.make(fit=True)
+            
+            # Create styled QR code image
+            img = qr.make_image(
+                image_factory=StyledPilImage,
+                module_drawer=RoundedModuleDrawer(),
+                color_mask=SquareGradiantColorMask(),
+                embeded_image_path=None  # Could add C25K logo here
+            )
+            
+            # Convert to base64 for embedding
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            
+            return base64.b64encode(buffer.getvalue()).decode()
+            
+        except Exception as e:
+            print(f"QR code generation failed: {e}")
+            return ""
+    
+    def generate_weekly_qr_codes(self, plan_data: Dict[str, Any]) -> Dict[int, str]:
+        """Generate individual QR codes for each week"""
+        weekly_codes = {}
+        
+        sessions_by_week = {}
+        for session in plan_data.get("sessions", []):
+            week = session.get("week", 1)
+            if week not in sessions_by_week:
+                sessions_by_week[week] = []
+            sessions_by_week[week].append(session)
+        
+        for week, sessions in sessions_by_week.items():
+            week_data = {
+                "week": week,
+                "sessions": sessions,
+                "metadata": plan_data.get("metadata", {})
+            }
+            weekly_codes[week] = self.generate_plan_qr(week_data, "summary")
+        
+        return weekly_codes
+    
+    def _generate_plan_id(self, plan_data: Dict[str, Any]) -> str:
+        """Generate unique ID for plan (for URL QR codes)"""
+        import hashlib
+        plan_str = json.dumps(plan_data, sort_keys=True)
+        return hashlib.md5(plan_str.encode()).hexdigest()[:12]
+    
+    def _compress_plan_data(self, plan_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Compress plan data to fit in QR code"""
+        return {
+            "v": "1.0",  # version
+            "t": plan_data.get("metadata", {}).get("start_date", ""),
+            "w": len(set(s.get("week", 1) for s in plan_data.get("sessions", []))),
+            "s": len(plan_data.get("sessions", [])),
+            "n": plan_data.get("metadata", {}).get("user_name", "")[:10]
+        }
+    
+    def _generate_plan_summary(self, plan_data: Dict[str, Any]) -> str:
+        """Generate human-readable plan summary"""
+        metadata = plan_data.get("metadata", {})
+        sessions = plan_data.get("sessions", [])
+        
+        summary = "🏃‍♀️ C25K Training Plan\\n"
+        summary += f"👤 {metadata.get('user_name', 'Runner')}\\n"
+        summary += f"📅 Start: {metadata.get('start_date', 'TBD')}\\n"
+        summary += f"📊 {len(sessions)} sessions over {len(set(s.get('week', 1) for s in sessions))} weeks\\n"
+        summary += "🎯 Goal: Complete 5K run\\n"
+        summary += "📱 Generated by C25K Calendar Creator"
+        
+        return summary
+
+
+class PDFExporter:
+    """Generate comprehensive PDF training guides"""
+    
+    def __init__(self):
+        self.styles = getSampleStyleSheet()
+        self._setup_custom_styles()
+    
+    def _setup_custom_styles(self):
+        """Setup custom PDF styles"""
+        self.styles.add(ParagraphStyle(
+            'CustomTitle',
+            parent=self.styles['Heading1'],
+            fontSize=24,
+            spaceAfter=30,
+            textColor=colors.HexColor('#2E86AB'),
+            alignment=1  # Center
+        ))
+        
+        self.styles.add(ParagraphStyle(
+            'WeekHeader',
+            parent=self.styles['Heading2'],
+            fontSize=16,
+            spaceBefore=20,
+            spaceAfter=10,
+            textColor=colors.HexColor('#A23B72')
+        ))
+        
+        self.styles.add(ParagraphStyle(
+            'WorkoutDetail',
+            parent=self.styles['Normal'],
+            fontSize=11,
+            leftIndent=20,
+            spaceBefore=5,
+            spaceAfter=5
+        ))
+    
+    def export_complete_guide(self, plan_data: Dict[str, Any], filename: str) -> bool:
+        """
+        Export complete PDF training guide with all features.
+        
+        Args:
+            plan_data: Complete training plan data
+            filename: Output PDF filename
+        
+        Returns:
+            Success status
+        """
+        try:
+            doc = SimpleDocTemplate(
+                filename,
+                pagesize=A4,
+                rightMargin=72, leftMargin=72,
+                topMargin=72, bottomMargin=18
+            )
+            
+            story = []
+            
+            # Title Page
+            story.extend(self._create_title_page(plan_data))
+            
+            # Progress Tracker
+            story.extend(self._create_progress_tracker(plan_data))
+            
+            # Weekly Breakdown
+            story.extend(self._create_weekly_breakdown(plan_data))
+            
+            # Nutrition and Safety Tips
+            story.extend(self._create_tips_section())
+            
+            # QR Code Page
+            story.extend(self._create_qr_page(plan_data))
+            
+            doc.build(story)
+            return True
+            
+        except Exception as e:
+            print(f"PDF export failed: {e}")
+            return False
+    
+    def _create_title_page(self, plan_data: Dict[str, Any]) -> List:
+        """Create PDF title page"""
+        story = []
+        metadata = plan_data.get("metadata", {})
+        
+        # Title
+        story.append(Paragraph("🏃‍♀️ Your Personal C25K Training Guide", self.styles['CustomTitle']))
+        story.append(Spacer(1, 20))
+        
+        # User info table
+        user_data = [
+            ['Participant', metadata.get('user_name', 'Your Name')],
+            ['Start Date', metadata.get('start_date', 'TBD')],
+            ['Age', f"{metadata.get('age', 'N/A')} years"],
+            ['Weight', f"{metadata.get('weight', 'N/A')} {metadata.get('units', 'kg')}"],
+            ['Fitness Level', metadata.get('fitness_level', 'Beginner')],
+            ['Plan Duration', f"{len(set(s.get('week', 1) for s in plan_data.get('sessions', [])))} weeks"],
+            ['Total Sessions', str(len(plan_data.get('sessions', [])))]
+        ]
+        
+        user_table = Table(user_data, colWidths=[2*inch, 3*inch])
+        user_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8F4FD')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(user_table)
+        story.append(Spacer(1, 30))
+        
+        # Program overview
+        overview_text = """
+        <b>Welcome to your personalized Couch to 5K journey!</b><br/><br/>
+        
+        This comprehensive guide contains everything you need to successfully complete 
+        the NHS Couch to 5K program. Over the next 9 weeks, you'll progress from 
+        running for just 60 seconds to completing a full 5K run.<br/><br/>
+        
+        <b>What's included:</b><br/>
+        • Week-by-week training schedule<br/>
+        • Progress tracking sheets<br/>
+        • Safety tips and nutrition advice<br/>
+        • QR codes for digital integration<br/>
+        • Emergency contact information<br/><br/>
+        
+        Remember: This program is designed to be gradual and safe. Listen to your 
+        body, take rest days seriously, and celebrate every achievement along the way!
+        """
+        
+        story.append(Paragraph(overview_text, self.styles['Normal']))
+        story.append(Spacer(1, 50))
+        
+        # Medical disclaimer
+        disclaimer = """
+        <b>⚠️ MEDICAL DISCLAIMER:</b> This training program is for informational 
+        purposes only. Consult your healthcare provider before starting any new 
+        exercise program, especially if you have pre-existing health conditions.
+        """
+        story.append(Paragraph(disclaimer, self.styles['Normal']))
+        
+        return story
+    
+    def _create_progress_tracker(self, plan_data: Dict[str, Any]) -> List:
+        """Create progress tracking pages"""
+        story = []
+        story.append(Paragraph("📊 Progress Tracker", self.styles['CustomTitle']))
+        
+        # Create a table for each week
+        sessions_by_week = {}
+        for session in plan_data.get("sessions", []):
+            week = session.get("week", 1)
+            if week not in sessions_by_week:
+                sessions_by_week[week] = []
+            sessions_by_week[week].append(session)
+        
+        for week in sorted(sessions_by_week.keys()):
+            story.append(Paragraph(f"Week {week}", self.styles['WeekHeader']))
+            
+            # Week goals and overview
+            week_sessions = sessions_by_week[week]
+            if week <= 2:
+                goal = "Build the habit of regular exercise"
+            elif week <= 5:
+                goal = "Increase running intervals"
+            elif week <= 7:
+                goal = "Build continuous running endurance"
+            else:
+                goal = "Complete 5K distance"
+            
+            story.append(Paragraph(f"<b>Week Goal:</b> {goal}", self.styles['Normal']))
+            story.append(Spacer(1, 10))
+            
+            # Progress table
+            progress_data = [['Session', 'Date Planned', 'Date Completed', 'Notes', '✓']]
+            
+            for i, session in enumerate(week_sessions, 1):
+                progress_data.append([
+                    f"Session {i}",
+                    session.get('date', ''),
+                    '',  # To be filled in by user
+                    '',  # Notes section
+                    ''   # Checkbox
+                ])
+            
+            progress_table = Table(progress_data, colWidths=[1*inch, 1.2*inch, 1.2*inch, 2*inch, 0.5*inch])
+            progress_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E86AB')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5F5F5')])
+            ]))
+            
+            story.append(progress_table)
+            story.append(Spacer(1, 20))
+        
+        return story
+    
+    def _create_weekly_breakdown(self, plan_data: Dict[str, Any]) -> List:
+        """Create detailed weekly breakdown"""
+        story = []
+        story.append(Paragraph("📅 Weekly Training Schedule", self.styles['CustomTitle']))
+        
+        sessions_by_week = {}
+        for session in plan_data.get("sessions", []):
+            week = session.get("week", 1)
+            if week not in sessions_by_week:
+                sessions_by_week[week] = []
+            sessions_by_week[week].append(session)
+        
+        for week in sorted(sessions_by_week.keys()):
+            story.append(Paragraph(f"Week {week}", self.styles['WeekHeader']))
+            
+            week_sessions = sessions_by_week[week]
+            
+            for i, session in enumerate(week_sessions, 1):
+                story.append(Paragraph(f"<b>Session {i}</b>", self.styles['Normal']))
+                story.append(Paragraph(session.get('description', ''), self.styles['WorkoutDetail']))
+                
+                # Add motivational tip
+                if i == 1:  # First session of the week
+                    tip = self._get_weekly_tip(week)
+                    story.append(Paragraph(f"<i>💡 Tip: {tip}</i>", self.styles['WorkoutDetail']))
+                
+                story.append(Spacer(1, 10))
+            
+            story.append(Spacer(1, 20))
+        
+        return story
+    
+    def _create_tips_section(self) -> List:
+        """Create tips and safety section"""
+        story = []
+        story.append(Paragraph("💡 Essential Tips for Success", self.styles['CustomTitle']))
+        
+        tips_data = [
+            ("🏃‍♀️ Running Form", [
+                "Land on the middle of your foot",
+                "Keep your arms relaxed and swing naturally",
+                "Maintain an upright posture",
+                "Look ahead, not at your feet"
+            ]),
+            ("💧 Hydration", [
+                "Drink water throughout the day",
+                "Hydrate 2-3 hours before running",
+                "For runs over 30 minutes, consider bringing water",
+                "Monitor urine color as a hydration indicator"
+            ]),
+            ("🍎 Nutrition", [
+                "Eat a light snack 30-60 minutes before running",
+                "Avoid heavy meals 2-3 hours before exercise",
+                "Focus on carbohydrates for energy",
+                "Include protein for muscle recovery"
+            ]),
+            ("⚠️ Safety", [
+                "Always warm up and cool down",
+                "Listen to your body - rest when needed",
+                "Run in well-lit, safe areas",
+                "Tell someone your running route and expected return"
+            ])
+        ]
+        
+        for title, tips in tips_data:
+            story.append(Paragraph(title, self.styles['WeekHeader']))
+            for tip in tips:
+                story.append(Paragraph(f"• {tip}", self.styles['WorkoutDetail']))
+            story.append(Spacer(1, 15))
+        
+        return story
+    
+    def _create_qr_page(self, plan_data: Dict[str, Any]) -> List:
+        """Create QR code page for digital integration"""
+        story = []
+        story.append(Paragraph("📱 Digital Integration", self.styles['CustomTitle']))
+        
+        qr_generator = QRCodeGenerator()
+        
+        # Generate main plan QR code
+        main_qr = qr_generator.generate_plan_qr(plan_data, "summary")
+        
+        if main_qr:
+            story.append(Paragraph("Scan this QR code to access your digital training plan:", self.styles['Normal']))
+            story.append(Spacer(1, 20))
+            
+            # Convert base64 QR code to ReportLab image
+            qr_data = base64.b64decode(main_qr)
+            qr_buffer = io.BytesIO(qr_data)
+            
+            story.append(RLImage(qr_buffer, width=3*inch, height=3*inch))
+            story.append(Spacer(1, 20))
+        
+        instructions = """
+        <b>How to use the QR code:</b><br/>
+        1. Open your smartphone camera<br/>
+        2. Point it at the QR code above<br/>
+        3. Tap the notification to open the link<br/>
+        4. Access your digital training plan<br/><br/>
+        
+        <b>Digital features include:</b><br/>
+        • Calendar integration<br/>
+        • Progress tracking<br/>
+        • Weather recommendations<br/>
+        • Export to fitness apps<br/>
+        """
+        
+        story.append(Paragraph(instructions, self.styles['Normal']))
+        
+        return story
+    
+    def _get_weekly_tip(self, week: int) -> str:
+        """Get motivational tip for each week"""
+        tips = {
+            1: "Focus on completing each session rather than speed",
+            2: "Your body is adapting - trust the process",
+            3: "This week introduces longer running intervals",
+            4: "You're building real endurance now",
+            5: "First continuous 20-minute run - you've got this!",
+            6: "Your cardiovascular fitness is improving significantly",
+            7: "You're officially a runner now",
+            8: "The finish line is in sight - stay consistent",
+            9: "Final week - you're about to achieve something amazing!"
+        }
+        return tips.get(week, "Keep pushing forward!")
+
+
+class AdvancedExporter:
+    """Coordinated advanced export functionality"""
+    
+    def __init__(self):
+        self.qr_generator = QRCodeGenerator()
+        self.pdf_exporter = PDFExporter()
+    
+    def export_with_qr_codes(self, plan_data: Dict[str, Any], base_filename: str) -> Dict[str, bool]:
+        """Export plan with QR codes in multiple formats"""
+        results = {}
+        
+        # Generate QR codes
+        main_qr = self.qr_generator.generate_plan_qr(plan_data, "summary")
+        weekly_qrs = self.qr_generator.generate_weekly_qr_codes(plan_data)
+        
+        # Save QR codes as images
+        if main_qr:
+            qr_path = f"{base_filename}_main_qr.png"
+            with open(qr_path, 'wb') as f:
+                f.write(base64.b64decode(main_qr))
+            results['main_qr'] = True
+        
+        for week, qr_data in weekly_qrs.items():
+            if qr_data:
+                qr_path = f"{base_filename}_week_{week}_qr.png"
+                with open(qr_path, 'wb') as f:
+                    f.write(base64.b64decode(qr_data))
+        
+        results['weekly_qrs'] = len(weekly_qrs) > 0
+        
+        return results
+    
+    def export_comprehensive_pdf(self, plan_data: Dict[str, Any], filename: str) -> bool:
+        """Export comprehensive PDF with all features"""
+        return self.pdf_exporter.export_complete_guide(plan_data, filename)
+    
+    def export_shareable_package(self, plan_data: Dict[str, Any], base_filename: str) -> Dict[str, bool]:
+        """Export complete shareable package"""
+        results = {}
+        
+        # PDF guide
+        results['pdf'] = self.export_comprehensive_pdf(plan_data, f"{base_filename}_guide.pdf")
+        
+        # QR codes
+        qr_results = self.export_with_qr_codes(plan_data, base_filename)
+        results.update(qr_results)
+        
+        # Summary JSON for QR codes
+        summary_path = f"{base_filename}_summary.json"
+        try:
+            with open(summary_path, 'w') as f:
+                json.dump(self.qr_generator._compress_plan_data(plan_data), f, indent=2)
+            results['summary_json'] = True
+        except Exception:
+            results['summary_json'] = False
+        
+        return results

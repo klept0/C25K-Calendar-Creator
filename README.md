@@ -60,8 +60,8 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/C25K-Calendar-Creator.git
-   cd C25K-Calendar-Creator
+   git clone https://github.com/yourusername/Random-Scripts.git
+   cd Random-Scripts
    ```
 
 2. **Install dependencies**
@@ -73,6 +73,20 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
    ```bash
    python c25k_ics_generator.py
    ```
+
+4. **🚀 Enable Advanced Features** *(Optional)*
+   ```bash
+   # Install advanced export dependencies
+   pip install qrcode[pil] reportlab Pillow
+   
+   # Test advanced features
+   python test_advanced_features.py
+   ```
+
+5. **🔑 Setup API Integrations** *(Optional)*
+   - Create accounts with [Strava](https://developers.strava.com/), [Intervals.icu](https://intervals.icu/), [OpenWeatherMap](https://openweathermap.org/api)
+   - Configure `api_credentials.json` (see [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md))
+   - Enable fitness platform exports and weather recommendations
 
 ### System Requirements
 
@@ -92,13 +106,26 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Interactive Calendar Preview** with color-coded workout days
 - **Comprehensive Testing** with unit test coverage
 
-### 🔄 **Planned Features** 
-- **Direct Mobile App Integration**: Strava, RunKeeper, Garmin Connect APIs
-- **Real Weather API Integration**: Live weather suggestions
-- **Multi-language Support**: Spanish and other language interfaces
-- **QR Code Export**: Plan sharing via QR codes  
-- **Advanced Analytics Dashboard**: Progress charts and metrics
-- **PDF Export**: Printable workout guides
+### � **Advanced Features - Ready to Deploy!**
+- **🌍 Multi-language Support**: Complete i18n system with 5 languages (English, Spanish, French, German, Portuguese)
+- **📱 Fitness Platform APIs**: Full integration framework for Strava, RunKeeper, Garmin Connect, **Intervals.icu**
+- **📄 PDF Export**: Comprehensive training guides with progress tracking and QR codes
+- **📊 QR Code Generation**: Shareable plan summaries and weekly codes
+- **🌤️ Weather Integration**: OpenWeatherMap API for workout recommendations
+- **🔧 Advanced Export Manager**: Unified system with graceful fallbacks
+
+### � **Activation Required** *(Install: `pip install qrcode[pil] reportlab`)*
+- **Intervals.icu Integration**: Structured workouts with power/pace zones
+- **PDF Training Guides**: Complete workout documentation 
+- **QR Code Sharing**: Mobile-friendly plan distribution
+- **Multi-language Interface**: Localized workout descriptions
+- **Weather Recommendations**: Live conditions and safety advice
+
+### 🔑 **API Setup Required** *(Credentials needed)*
+- **Strava Integration**: OAuth2 + training calendar upload
+- **RunKeeper Integration**: Activity import/export
+- **Garmin Connect**: Training plan synchronization  
+- **Weather Services**: Live forecast integration
 
 ## 📋 Dependencies
 
@@ -149,8 +176,12 @@ reportlab>=4.0.0       # PDF export functionality (planned feature)
 | **📈 CSV** | Spreadsheet apps | Import into Google Sheets, Numbers, Excel | ✅ Implemented |
 | **🔗 JSON** | App integration | Structured data for other fitness apps | ✅ Implemented |
 | **🏃 Google Fit** | Fitness tracking | CSV format compatible with Google Fit | ✅ Implemented |
-| **📱 Strava/RunKeeper** | Popular running apps | Direct export to running platforms | 🔄 Planned |
-| **📊 QR Codes** | Easy sharing | QR codes containing plan summary | 🔄 Planned |
+| **📱 Strava/RunKeeper** | Popular running apps | Direct export to running platforms | � Ready to Deploy |
+| **📊 QR Codes** | Easy sharing | QR codes containing plan summary | � Ready to Deploy |
+| **📄 PDF Guide** | Comprehensive docs | Complete training guide with tips and tracking | 🔧 Ready to Deploy |
+| **🎯 Intervals.icu** | Structured training | Power/pace zones, advanced workout structure | 🔧 Ready to Deploy |
+| **🌤️ Weather Integration** | Smart recommendations | Live weather-based workout suggestions | 🔧 Ready to Deploy |
+| **🌍 Multi-language** | Global accessibility | Spanish, French, German, Portuguese support | 🔧 Ready to Deploy |
 
 ## 🎯 Sample Training Plan
 

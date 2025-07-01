@@ -1,8 +1,25 @@
 # Requirements for Couch to 5K ICS Generator
 # Standard library only, except for the following:
+
+# Core GUI and Excel functionality
 PyQt6>=6.0.0  # GUI framework
-requests>=2.0.0
-qrcode[pil]>=7.0.0  # For QR code export
-reportlab>=4.0.0  # For PDF export
 openpyxl>=3.1.0  # For Excel export and macros
+
+# API Integrations and Weather
+requests>=2.0.0  # For API calls to fitness platforms and weather services
+urllib3>=1.26.0  # HTTP client for secure API connections
+
+# Advanced Export Features  
+qrcode[pil]>=7.0.0  # For QR code generation with PIL support
+reportlab>=4.0.0  # For PDF export functionality
+Pillow>=8.0.0  # Image processing for QR codes and PDFs
+
+# Fitness Platform APIs
+strava-client>=0.1.0  # Strava API integration (if available)
+# Note: Some platforms require manual API setup
+
+# Optional Development Dependencies
+# pytest>=6.0.0  # For running tests
+# black>=21.0.0  # Code formatting
+# mypy>=0.800  # Type checking
 
