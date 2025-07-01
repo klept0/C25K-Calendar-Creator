@@ -122,8 +122,8 @@ class C25KPyQtGUI(QWidget):
         self.prefs = self.load_preferences()
         # Initialize units based on preferences
         self._current_unit = "imperial" if self.prefs.get("unit", "i") == "i" else "metric"
-        self.init_ui()
-        # Set initial units after UI is created
+        self.init_ui()  # This creates self.weight_spin and other widgets
+        # Set initial units after UI is created (weight_spin now exists)
         self.set_units(self._current_unit)
         # Onboarding: show welcome dialog on first launch
         if not self.prefs.get("onboarded", False):
