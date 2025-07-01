@@ -33,8 +33,8 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **📄 Multiple Formats**: CSV, JSON, Markdown checklists
 - **🔗 Google Fit**: CSV export compatible with Google Fit
 
-### 📅 **Planned Export Features** *(Coming Soon)*
-- **🏃 Mobile Apps**: Direct export to Strava, RunKeeper, Garmin Connect, Apple Health
+### 📅 **Advanced Export Features**
+- **🏃 Mobile Apps**: Direct export to Strava, RunKeeper, Garmin Connect, Apple Health, Intervals.icu
 - **📊 QR Code Export**: Generate QR codes for easy plan sharing
 
 ### 🎨 **Modern GUI Experience**
@@ -43,9 +43,9 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Persistent Preferences**: Your settings are automatically saved and restored
 - **Real-time Calendar Preview**: See your workout schedule with color-coded days
 
-### 🌍 **Internationalization** *(Planned)*
-- **Multi-language Support**: English interface (Spanish support planned)
-- **Localized Content**: Workout instructions in multiple languages (planned)
+### 🌍 **Internationalization**
+- **Multi-language Support**: English, Spanish, French, German, Portuguese
+- **Localized Content**: Workout instructions in multiple languages
 - **Regional Settings**: Imperial/Metric units supported
 
 ### 🏥 **Health & Safety**
@@ -106,7 +106,7 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Interactive Calendar Preview** with color-coded workout days
 - **Comprehensive Testing** with unit test coverage
 
-### � **Advanced Features - Ready to Deploy!**
+### 🚀 **Advanced Features - Ready to Deploy!**
 - **🌍 Multi-language Support**: Complete i18n system with 5 languages (English, Spanish, French, German, Portuguese)
 - **📱 Fitness Platform APIs**: Full integration framework for Strava, RunKeeper, Garmin Connect, **Intervals.icu**
 - **📄 PDF Export**: Comprehensive training guides with progress tracking and QR codes
@@ -114,7 +114,7 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **🌤️ Weather Integration**: OpenWeatherMap API for workout recommendations
 - **🔧 Advanced Export Manager**: Unified system with graceful fallbacks
 
-### � **Activation Required** *(Install: `pip install qrcode[pil] reportlab`)*
+### 🔧 **Activation Required** *(Install: `pip install qrcode[pil] reportlab`)*
 - **Intervals.icu Integration**: Structured workouts with power/pace zones
 - **PDF Training Guides**: Complete workout documentation 
 - **QR Code Sharing**: Mobile-friendly plan distribution
@@ -159,7 +159,8 @@ reportlab>=4.0.0       # PDF export functionality (planned feature)
   - **📄 Checklist**: Print-friendly Markdown format
   - **📈 CSV**: Import into Google Sheets, Numbers, Excel, or Google Fit
   - **🔗 JSON**: Structured data for app integration
-- **Coming Soon**: Direct exports to Strava, RunKeeper, Garmin Connect, Apple Health
+  
+  - **Now Available**: Direct exports to Strava, RunKeeper, Garmin Connect, Apple Health, Intervals.icu, PDF, QR Codes, and more!
 
 ### 4. **Track Progress**
 - Use the Excel tracker for detailed progress monitoring
@@ -176,8 +177,8 @@ reportlab>=4.0.0       # PDF export functionality (planned feature)
 | **📈 CSV** | Spreadsheet apps | Import into Google Sheets, Numbers, Excel | ✅ Implemented |
 | **🔗 JSON** | App integration | Structured data for other fitness apps | ✅ Implemented |
 | **🏃 Google Fit** | Fitness tracking | CSV format compatible with Google Fit | ✅ Implemented |
-| **📱 Strava/RunKeeper** | Popular running apps | Direct export to running platforms | � Ready to Deploy |
-| **📊 QR Codes** | Easy sharing | QR codes containing plan summary | � Ready to Deploy |
+| **📱 Strava/RunKeeper** | Popular running apps | Direct export to running platforms | 🚀 Ready to Deploy |
+| **📊 QR Codes** | Easy sharing | QR codes containing plan summary | 🚀 Ready to Deploy |
 | **📄 PDF Guide** | Comprehensive docs | Complete training guide with tips and tracking | 🔧 Ready to Deploy |
 | **🎯 Intervals.icu** | Structured training | Power/pace zones, advanced workout structure | 🔧 Ready to Deploy |
 | **🌤️ Weather Integration** | Smart recommendations | Live weather-based workout suggestions | 🔧 Ready to Deploy |
@@ -230,18 +231,23 @@ reportlab>=4.0.0       # PDF export functionality (planned feature)
 
 ### Project Structure
 ```
-C25K Calendar Creator/
+Random-Scripts/
 ├── c25k_ics_generator.py          # Main application entry point
 ├── modules/                       # Core application modules
 │   ├── core.py                   # Business logic and plan generation
 │   ├── pyqt_gui.py              # PyQt6 user interface
 │   ├── exports.py               # Export functionality
+│   ├── api_integrations.py      # Fitness platform APIs
+│   ├── advanced_exports.py      # PDF & QR code generation
+│   ├── internationalization.py  # Multi-language support
 │   └── utils.py                 # Utility functions
 ├── c25k_utils/                   # Specialized utilities
 │   ├── accessibility.py         # Accessibility enhancements
 │   └── mobile_export.py         # Mobile app integrations
 ├── tests/                        # Test suite
 │   └── test_plan.py             # Unit tests for plan generation
+├── test_advanced_features.py     # Advanced features test suite
+├── IMPLEMENTATION_GUIDE.md       # Advanced setup instructions
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
 ```
