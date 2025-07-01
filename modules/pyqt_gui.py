@@ -1,6 +1,8 @@
 import json  # used for preferences
 import os
 import sys
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QFormLayout
 
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
@@ -114,6 +116,9 @@ class C25KPyQtGUI(QWidget):
         super().__init__()
         self.submit_callback = submit_callback
         self.setWindowTitle("C25K Calendar Creator")
+        # Set a minimum and default window size to ensure main content is visible
+        self.setMinimumSize(900, 600)
+        self.resize(1100, 700)
         # Initialize attributes for OS and json modules
         self.os = os
         self.json = json
@@ -123,59 +128,275 @@ class C25KPyQtGUI(QWidget):
         # Initialize units based on preferences
         self._current_unit = "imperial" if self.prefs.get("unit", "i") == "i" else "metric"
         self.init_ui()  # This creates self.weight_spin and other widgets
-        # Set initial units after UI is created (weight_spin now exists)
-        self.set_units(self._current_unit)
+        # Only call set_units after confirming weight_spin exists
+        if hasattr(self, "weight_spin"):
+            self.set_units(self._current_unit)
         # Onboarding: show welcome dialog on first launch
         if not self.prefs.get("onboarded", False):
             self.show_onboarding()
             self.prefs["onboarded"] = True
             self.save_preferences(silent=True)
 
+
     def init_ui(self):
+        print("[DEBUG] init_ui: start")
+        try:
+            # Main horizontal layout: form (left), calendar (right)
+            main_layout = QHBoxLayout()
+            form_layout = QVBoxLayout()
 
-        # Menu bar (Help, Screenshots, About, Units, Integrations)
-        self.menu_bar = QMenuBar(self)
+            # Menu bar (Help, Screenshots, About, Units, Integrations, Feedback)
+            self.menu_bar = QMenuBar(self)
+            # Help menu
+            help_menu = QMenu("Help", self)
+            about_action = QAction("About", self)
+            about_action.triggered.connect(self.show_help)
+            screenshots_action = QAction("Screenshots", self)
+            screenshots_action.triggered.connect(self.show_screenshots)
+            help_menu.addAction(about_action)
+            help_menu.addAction(screenshots_action)
+            self.menu_bar.addMenu(help_menu)
+            # Units dropdown in menu bar
+            units_menu = QMenu("Units", self)
+            self.imperial_action = QAction("Imperial (lbs, °F)", self)
+            self.imperial_action.setCheckable(True)
+            self.metric_action = QAction("Metric (kg, °C)", self)
+            self.metric_action.setCheckable(True)
+            self.imperial_action.triggered.connect(lambda: self.set_units("imperial"))
+            self.metric_action.triggered.connect(lambda: self.set_units("metric"))
+            # Set initial state
+            if self.prefs.get("unit", "i") == "i":
+                self.imperial_action.setChecked(True)
+            else:
+                self.metric_action.setChecked(True)
+            units_menu.addAction(self.imperial_action)
+            units_menu.addAction(self.metric_action)
+            self.menu_bar.addMenu(units_menu)
+            # Integrations menu
+            integrations_menu = QMenu("Integrations", self)
+            manage_integrations_action = QAction("Enable/Disable Integrations...", self)
+            manage_integrations_action.triggered.connect(self.show_integrations_dialog)
+            integrations_menu.addAction(manage_integrations_action)
+            self.menu_bar.addMenu(integrations_menu)
+            # Feedback menu
+            feedback_menu = QMenu("Feedback", self)
+            send_feedback_action = QAction("Send Feedback", self)
+            send_feedback_action.triggered.connect(self.show_feedback_dialog)
+            feedback_menu.addAction(send_feedback_action)
+            self.menu_bar.addMenu(feedback_menu)
+            form_layout.setMenuBar(self.menu_bar)
 
-        # Help menu
-        help_menu = QMenu("Help", self)
-        about_action = QAction("About", self)
-        about_action.triggered.connect(self.show_help)
-        screenshots_action = QAction("Screenshots", self)
-        screenshots_action.triggered.connect(self.show_screenshots)
-        help_menu.addAction(about_action)
-        help_menu.addAction(screenshots_action)
-        self.menu_bar.addMenu(help_menu)
+            print("[DEBUG] init_ui: menu bar and form_layout created")
 
-        # Units dropdown in menu bar
-        units_menu = QMenu("Units", self)
-        self.imperial_action = QAction("Imperial (lbs, °F)", self, checkable=True)
-        self.metric_action = QAction("Metric (kg, °C)", self, checkable=True)
-        self.imperial_action.triggered.connect(lambda: self.set_units("imperial"))
-        self.metric_action.triggered.connect(lambda: self.set_units("metric"))
-        # Set initial state
-        if self.prefs.get("unit", "i") == "i":
-            self.imperial_action.setChecked(True)
-        else:
-            self.metric_action.setChecked(True)
-        units_menu.addAction(self.imperial_action)
-        units_menu.addAction(self.metric_action)
-        self.menu_bar.addMenu(units_menu)
+            # ...existing code for adding widgets to form_layout and main_layout...
+            # Feedback button removed from form layout (now in menu)
+            print("[DEBUG] init_ui: feedback button added")
+            # --- Personal Information Group ---
+            personal_group = QGroupBox("Personal Information")
+            personal_form = QFormLayout()
+            personal_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            personal_form.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            personal_form.setHorizontalSpacing(18)
+            personal_form.setVerticalSpacing(12)
+            self.name_edit = QLineEdit()
+            self.name_edit.setToolTip("Enter your name (required)")
+            self.name_edit.setText(self.prefs.get("name", ""))
+            personal_form.addRow("Name", self.name_edit)
+            self.age_spin = QSpinBox()
+            self.age_spin.setRange(5, 120)
+            self.age_spin.setValue(self.prefs.get("age", 30))
+            self.age_spin.setToolTip("Enter your age (5-120)")
+            personal_form.addRow("Age", self.age_spin)
+            self.weight_spin = QSpinBox()
+            self.weight_spin.setRange(50, 500)
+            self.weight_spin.setValue(self.prefs.get("weight", 150))
+            self.weight_spin.setToolTip("Enter your weight")
+            personal_form.addRow("Weight (lbs)", self.weight_spin)
+            self.gender_combo = QComboBox()
+            self.gender_combo.addItems(["male", "female", "other"])
+            gender_idx = self.gender_combo.findText(self.prefs.get("gender", "male"))
+            self.gender_combo.setCurrentIndex(gender_idx if gender_idx >= 0 else 0)
+            self.gender_combo.setToolTip("Select your gender")
+            personal_form.addRow("Gender", self.gender_combo)
+            personal_group.setLayout(personal_form)
+            personal_group.setMinimumHeight(180)
+            personal_group.setStyleSheet("QGroupBox { margin-top: 12px; margin-bottom: 8px; padding: 16px 16px 12px 16px; font-size: 14px; } QLabel { margin-bottom: 6px; }")
+            form_layout.addWidget(personal_group)
+            form_layout.addSpacing(22)
 
-        # Integrations menu
-        integrations_menu = QMenu("Integrations", self)
-        manage_integrations_action = QAction("Enable/Disable Integrations...", self)
-        manage_integrations_action.triggered.connect(self.show_integrations_dialog)
-        integrations_menu.addAction(manage_integrations_action)
-        self.menu_bar.addMenu(integrations_menu)
+            # --- Plan Settings Group ---
+            plan_group = QGroupBox("Plan Settings")
+            plan_group.setMinimumHeight(200)
+            plan_form = QFormLayout()
+            plan_form.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            plan_form.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            plan_form.setHorizontalSpacing(18)
+            plan_form.setVerticalSpacing(12)
+            self.weeks_spin = QSpinBox()
+            self.weeks_spin.setRange(1, 52)
+            self.weeks_spin.setValue(self.prefs.get("weeks", 10))
+            self.weeks_spin.setToolTip("Number of weeks in your plan (default 10)")
+            plan_form.addRow("Weeks", self.weeks_spin)
+            self.days_spin = QSpinBox()
+            self.days_spin.setRange(1, 7)
+            self.days_spin.setValue(self.prefs.get("days_per_week", 3))
+            self.days_spin.setToolTip("Days per week (default 3)")
+            plan_form.addRow("Days/Week", self.days_spin)
+            from PyQt6.QtCore import QDate
+            from PyQt6.QtWidgets import QDateEdit
+            self.start_date = QDateEdit()
+            self.start_date.setCalendarPopup(True)
+            self.start_date.setDate(QDate.currentDate())
+            self.start_date.setToolTip("Select your plan start date")
+            plan_form.addRow("Start Date", self.start_date)
+            self.time_edit = QLineEdit()
+            self.time_edit.setPlaceholderText("07:00")
+            self.time_edit.setToolTip("Session start time (HH:MM, 24h)")
+            self.time_edit.setText(self.prefs.get("time", "07:00"))
+            plan_form.addRow("Session Time", self.time_edit)
+            self.export_combo = QComboBox()
+            self.export_combo.addItems([
+                "ICS (Calendar)",
+                "CSV",
+                "JSON",
+                "Google Fit CSV",
+                "Markdown",
+                "Strava/Runkeeper",
+                "Apple Health",
+            ])
+            self.export_combo.setToolTip("Choose export format")
+            plan_form.addRow("Export Format", self.export_combo)
+            self.email_edit = QLineEdit()
+            self.email_edit.setToolTip("Enter your email for reminders (optional)")
+            self.email_edit.setText(self.prefs.get("email", ""))
+            plan_form.addRow("Email", self.email_edit)
+            self.location_edit = QLineEdit()
+            self.location_edit.setToolTip("Enter your city or ZIP for weather (optional)")
+            self.location_edit.setText(self.prefs.get("location", ""))
+            plan_form.addRow("Location", self.location_edit)
+            self.anonymize = QCheckBox("Anonymize Exports")
+            self.anonymize.setToolTip("Remove personal info from all exports. If checked, your name and email will not appear in any export file.")
+            self.anonymize.setChecked(self.prefs.get("anonymize", False))
+            plan_form.addRow("", self.anonymize)
+            plan_group.setLayout(plan_form)
+            plan_group.setStyleSheet("QGroupBox { margin-top: 12px; margin-bottom: 8px; padding: 16px 16px 12px 16px; font-size: 14px; } QLabel { margin-bottom: 6px; } QLineEdit, QComboBox, QSpinBox { min-height: 28px; font-size: 13px; } QCheckBox { margin-top: 4px; margin-bottom: 4px; }")
+            form_layout.addWidget(plan_group)
+            form_layout.addSpacing(22)
+
+            # --- Accessibility Options Group ---
+            acc_group = QGroupBox("Accessibility Options")
+            acc_group.setMinimumHeight(180)
+            acc_layout = QVBoxLayout()
+            self.high_contrast = QCheckBox("High Contrast")
+            self.high_contrast.setToolTip("Enable high contrast mode for better visibility.")
+            self.high_contrast.setChecked(self.prefs.get("high_contrast", False))
+            self.large_font = QCheckBox("Large Font")
+            self.large_font.setToolTip("Increase font size for readability.")
+            self.large_font.setChecked(self.prefs.get("large_font", False))
+            self.dyslexia_font = QCheckBox("Dyslexia Font")
+            self.dyslexia_font.setToolTip("Use a dyslexia-friendly font (Comic Sans MS).")
+            self.dyslexia_font.setChecked(self.prefs.get("dyslexia_font", False))
+            self.light_mode = QCheckBox("Light Mode")
+            self.light_mode.setToolTip("Enable a light color scheme for the app.")
+            self.light_mode.setChecked(self.prefs.get("light_mode", False))
+            self.light_mode.stateChanged.connect(self.apply_palette)
+            self.screen_reader = QCheckBox("Screen Reader Mode")
+            self.screen_reader.setToolTip("Enable extra descriptions for screen readers.")
+            self.screen_reader.setChecked(self.prefs.get("screen_reader", False))
+            self.increased_spacing = QCheckBox("Increased Spacing")
+            self.increased_spacing.setToolTip("Add extra spacing between form elements.")
+            self.increased_spacing.setChecked(self.prefs.get("increased_spacing", False))
+            self.focus_highlight = QCheckBox("Focus Highlight")
+            self.focus_highlight.setToolTip("Highlight focused fields for keyboard navigation.")
+            self.focus_highlight.setChecked(self.prefs.get("focus_highlight", False))
+            reset_btn = QPushButton("Reset Accessibility Settings")
+            reset_btn.setToolTip("Reset all accessibility options to default.")
+            reset_btn.clicked.connect(self.reset_accessibility)
+            acc_layout.addWidget(self.high_contrast)
+            acc_layout.addWidget(self.large_font)
+            acc_layout.addWidget(self.dyslexia_font)
+            acc_layout.addWidget(self.light_mode)
+            acc_layout.addWidget(self.screen_reader)
+            acc_layout.addWidget(self.increased_spacing)
+            acc_layout.addWidget(self.focus_highlight)
+            acc_layout.addWidget(reset_btn)
+            acc_layout.setSpacing(10)
+            acc_group.setLayout(acc_layout)
+            acc_group.setStyleSheet("QGroupBox { margin-top: 12px; margin-bottom: 8px; padding: 16px 16px 12px 16px; font-size: 14px; } QCheckBox { margin-top: 6px; margin-bottom: 6px; font-size: 13px; } QPushButton { margin-top: 10px; margin-bottom: 0px; min-height: 28px; }")
+            form_layout.addWidget(acc_group)
+            form_layout.addSpacing(22)
+
+            # Add remaining buttons
+            # (Feedback, Preview Export, Save Preferences, Generate Plan)
+            # These are already added in the full code
+
+            # Add stretch to push content to the top and prevent crowding
+            form_layout.addStretch(1)
+
+            # Optionally set a minimum width for the left panel
+            left_panel = QWidget()
+            left_panel.setLayout(form_layout)
+            left_panel.setMinimumWidth(480)
+            left_panel.setStyleSheet("QWidget { font-size: 13px; } QPushButton { margin-top: 10px; margin-bottom: 10px; min-height: 28px; } QLineEdit, QComboBox, QSpinBox { margin-bottom: 8px; min-height: 28px; } QGroupBox { border-radius: 8px; border: 1.5px solid #555; } QLabel { color: #e0e0e0; }")
+
+            # --- Calendar Widget ---
+            self.calendar = QCalendarWidget()
+            self.calendar.setGridVisible(True)
+            self.calendar.setToolTip(
+                "Visual calendar: workout days will be highlighted after you choose your plan options."
+            )
+            self.calendar.setMinimumWidth(350)
+            # Add a frame for visual separation
+            calendar_frame = QFrame()
+            calendar_frame.setFrameShape(QFrame.Shape.StyledPanel)
+            calendar_layout = QVBoxLayout()
+            calendar_label = QLabel("Workout Calendar Preview")
+            calendar_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+            calendar_layout.addWidget(calendar_label)
+            calendar_layout.addWidget(self.calendar)
+            legend_layout = QHBoxLayout()
+            workout_color = QLabel()
+            workout_color.setFixedSize(18, 18)
+            workout_color.setStyleSheet("background: rgba(0,120,215,0.5); border: 1px solid #888;")
+            legend_layout.addWidget(workout_color)
+            legend_layout.addWidget(QLabel("Workout Day"))
+            milestone_color = QLabel()
+            milestone_color.setFixedSize(18, 18)
+            milestone_color.setStyleSheet("background: rgba(255,215,0,0.7); border: 1px solid #888;")
+            legend_layout.addWidget(milestone_color)
+            legend_layout.addWidget(QLabel("Milestone (End of Week)"))
+            rest_color = QLabel()
+            rest_color.setFixedSize(18, 18)
+            rest_color.setStyleSheet("background: rgba(180,180,180,0.5); border: 1px solid #888;")
+            legend_layout.addWidget(rest_color)
+            legend_layout.addWidget(QLabel("Rest Day"))
+            legend_layout.addStretch(1)
+            calendar_layout.addLayout(legend_layout)
+            calendar_frame.setLayout(calendar_layout)
+
+            # Add form and calendar to main layout
+            main_layout.addWidget(left_panel, stretch=2)
+            main_layout.addWidget(calendar_frame, stretch=1)
+
+            # At the end, set the layout
+            self.setLayout(main_layout)
+            print("[DEBUG] init_ui: main_layout set")
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Exception in init_ui: {e}")
+            traceback.print_exc()
 
     def show_integrations_dialog(self):
+        # Ensure base form widgets are always visible
+        if not self.isVisible():
+            self.show()
         """Show a dialog to enable/disable integrations (Strava, RunKeeper, Garmin, Intervals.icu, Weather)."""
         integrations = [
-            ("Strava", "strava_enabled"),
-            ("RunKeeper", "runkeeper_enabled"),
-            ("Garmin Connect", "garmin_enabled"),
-            ("Intervals.icu", "intervals_enabled"),
-            ("Weather Integration", "weather_enabled"),
+            ("Strava", "strava_enabled", "strava_api_key", "Enter your Strava API key:"),
+            ("RunKeeper", "runkeeper_enabled", "runkeeper_api_key", "Enter your RunKeeper API key:"),
+            ("Garmin Connect", "garmin_enabled", "garmin_api_key", "Enter your Garmin Connect API key:"),
+            ("Intervals.icu", "intervals_enabled", "intervals_api_key", "Enter your Intervals.icu API key:"),
+            ("Weather Integration", "weather_enabled", "weather_api_key", "Enter your OpenWeatherMap API key:"),
         ]
         dialog = QDialog(self)
         dialog.setWindowTitle("Manage Integrations")
@@ -183,7 +404,7 @@ class C25KPyQtGUI(QWidget):
         label = QLabel("Enable or disable integrations. Changes are saved automatically.")
         layout.addWidget(label)
         checkboxes = {}
-        for name, key in integrations:
+        for name, key, _, _ in integrations:
             cb = QCheckBox(name)
             cb.setChecked(self.prefs.get(key, True))
             layout.addWidget(cb)
@@ -191,10 +412,49 @@ class C25KPyQtGUI(QWidget):
         btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         btns.accepted.connect(dialog.accept)
         layout.addWidget(btns)
+
+        def prompt_api_key(api_key_pref, prompt_text):
+            # Only prompt if not already set
+            if self.prefs.get(api_key_pref):
+                return
+            key_dialog = QDialog(self)
+            key_dialog.setWindowTitle("API Key Required")
+            key_layout = QVBoxLayout(key_dialog)
+            key_label = QLabel(prompt_text)
+            key_layout.addWidget(key_label)
+            key_edit = QLineEdit()
+            # Show API key as plaintext so user can confirm accuracy
+            key_edit.setEchoMode(QLineEdit.EchoMode.Normal)
+            key_layout.addWidget(key_edit)
+            key_btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+            key_layout.addWidget(key_btns)
+            def accept_key():
+                val = key_edit.text().strip()
+                if val:
+                    self.prefs[api_key_pref] = val
+                    # Save only the API key to disk, not the full preferences (avoid widget dependency)
+                    try:
+                        with open(self.PREFS_FILE, "w", encoding="utf-8") as f:
+                            json.dump(self.prefs, f, indent=2)
+                    except Exception as e:
+                        print(f"[ERROR] Could not save API key: {e}")
+                key_dialog.accept()
+            key_btns.accepted.connect(accept_key)
+            key_btns.rejected.connect(key_dialog.reject)
+            key_dialog.exec()
+
         def save_integrations():
-            for key, cb in checkboxes.items():
-                self.prefs[key] = cb.isChecked()
-            self.save_preferences(silent=True)
+            for name, key, api_key_pref, prompt_text in integrations:
+                enabled = checkboxes[key].isChecked()
+                self.prefs[key] = enabled
+                if enabled:
+                    prompt_api_key(api_key_pref, prompt_text)
+            # Save only the integration preferences directly to disk (avoid widget dependency)
+            try:
+                with open(self.PREFS_FILE, "w", encoding="utf-8") as f:
+                    json.dump(self.prefs, f, indent=2)
+            except Exception as e:
+                print(f"[ERROR] Could not save integration preferences: {e}")
         dialog.accepted.connect(save_integrations)
         dialog.exec()
 
@@ -428,7 +688,7 @@ class C25KPyQtGUI(QWidget):
 
         # Set keyboard shortcuts
         feedback_btn.setShortcut("Alt+F")
-        about_action.setShortcut("Alt+H")
+        # about_action is not in this scope; shortcut is set above where it's defined
 
         # Set tab order for logical navigation
         self.setTabOrder(self.name_edit, self.age_spin)
@@ -883,6 +1143,8 @@ For help, visit the README or contact the author.
         if QPalette is None or QColor is None:
             return
         app = QApplication.instance()
+        if app is None:
+            return
         if self.light_mode.isChecked():
             palette = QPalette()
             palette.setColor(QPalette.ColorRole.Window, QColor(255, 255, 255))
@@ -1004,7 +1266,19 @@ For help, visit the README or contact the author.
 
 
 def run_pyqt_gui(submit_callback=None):
+    print("[DEBUG] Starting QApplication...")
     app = QApplication(sys.argv)
-    win = C25KPyQtGUI(submit_callback)
-    win.show()
+    try:
+        print("[DEBUG] Creating main window...")
+        win = C25KPyQtGUI(submit_callback)
+        print("[DEBUG] Main window created. Showing window...")
+        win.show()
+    except Exception as e:
+        import traceback
+        print("[ERROR] Exception during GUI initialization:", e)
+        traceback.print_exc()
+        from PyQt6.QtWidgets import QMessageBox
+        QMessageBox.critical(None, "Startup Error", f"Could not start GUI: {e}")
+        sys.exit(1)
+    print("[DEBUG] Entering Qt event loop...")
     sys.exit(app.exec())
