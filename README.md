@@ -1,11 +1,11 @@
+
 # ℹ️ About This Project
 
 This project began as a personal tool to help manage my own Couch to 5K journey. After finding it useful, I decided to share it with the community in hopes that others might benefit as well. Contributions, pull requests, and suggestions for enhancements are very welcome!
 
 Feel free to open issues, submit pull requests, or suggest new features—let's make C25K Calendar Creator even better together.
 
-
-# 🏃‍♀️ C25K Calendar Creator
+## 🏃‍♀️ C25K Calendar Creator
 
 
 
@@ -14,9 +14,10 @@ Feel free to open issues, submit pull requests, or suggest new features—let's 
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 
-**A modern, accessible Couch to 5K training plan generator with a beautiful PyQt6 GUI**
 
-_Turn your fitness goals into reality with personalized workout calendars and comprehensive tracking tools_
+### A modern, accessible Couch to 5K training plan generator with a beautiful PyQt6 GUI
+
+Turn your fitness goals into reality with personalized workout calendars and comprehensive tracking tools.
 
 ## 🌟 Overview
 
@@ -36,7 +37,7 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Progressive Structure**: Follows NHS Couch to 5K guidelines
 
 
-### 📅 **Export Formats** *(Implemented)*
+### 📅 Export Formats _(Implemented)_
 
 - **📱 Calendar Integration**: `.ics` files for Apple Calendar, Google Calendar, and Outlook
 - **📊 Excel Tracker**: Advanced progress tracking with macros and visual indicators
@@ -44,13 +45,13 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **🔗 Google Fit**: CSV export compatible with Google Fit
 
 
-### 📅 **Advanced Export Features**
+### 📅 Advanced Export Features
 
 - **🏃 Mobile Apps**: Direct export to Strava, RunKeeper, Garmin Connect, Apple Health, Intervals.icu
 - **📊 QR Code Export**: Generate QR codes for easy plan sharing
 
 
-### 🎨 **Modern GUI Experience**
+### 🎨 Modern GUI Experience
 
 - **Intuitive Interface**: Clean, user-friendly PyQt6 design
 - **Accessibility Features**: High contrast mode, large fonts, dyslexia-friendly fonts, screen reader support
@@ -58,14 +59,14 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Real-time Calendar Preview**: See your workout schedule with color-coded days
 
 
-### 🌍 **Internationalization**
+### 🌍 Internationalization
 
 - **Multi-language Support**: English, Spanish, French, German, Portuguese
 - **Localized Content**: Workout instructions in multiple languages
 - **Regional Settings**: Imperial/Metric units supported
 
 
-### 🏥 **Health & Safety**
+### 🏥 Health & Safety
 
 - **Medical Guidelines**: Based on NHS, CDC, and American Heart Association recommendations
 - **Safety Reminders**: Hydration and health monitoring tips included
@@ -130,7 +131,7 @@ cd C25K-Calendar-Creator
 
 ## 🎯 Current Status
 
-### ✅ **Fully Implemented Features**
+### ✅ Fully Implemented Features
 - **Complete PyQt6 GUI** with modern interface
 - **Core C25K Plan Generation** following NHS guidelines  
 - **Multiple Export Formats**: ICS, CSV, JSON, Markdown, Excel tracker
@@ -139,7 +140,7 @@ cd C25K-Calendar-Creator
 - **Interactive Calendar Preview** with color-coded workout days
 - **Comprehensive Testing** with unit test coverage
 
-### 🚀 **Advanced Features - Ready to Deploy!**
+### 🚀 Advanced Features - Ready to Deploy!
 - **🌍 Multi-language Support**: Complete i18n system with 5 languages (English, Spanish, French, German, Portuguese)
 - **📱 Fitness Platform APIs**: Full integration framework for Strava, RunKeeper, Garmin Connect, **Intervals.icu**
 - **📄 PDF Export**: Comprehensive training guides with progress tracking and QR codes
@@ -147,14 +148,14 @@ cd C25K-Calendar-Creator
 - **🌤️ Weather Integration**: OpenWeatherMap API for workout recommendations
 - **🔧 Advanced Export Manager**: Unified system with graceful fallbacks
 
-### 🔧 **Activation Required** *(Install: `pip install qrcode[pil] reportlab`)*
+### 🔧 Activation Required _(Install: `pip install qrcode[pil] reportlab`)_
 - **Intervals.icu Integration**: Structured workouts with power/pace zones
 - **PDF Training Guides**: Complete workout documentation 
 - **QR Code Sharing**: Mobile-friendly plan distribution
 - **Multi-language Interface**: Localized workout descriptions
 - **Weather Recommendations**: Live conditions and safety advice
 
-### 🔑 **API Setup Required** *(Credentials needed)*
+### 🔑 API Setup Required _(Credentials needed)_
 - **Strava Integration**: OAuth2 + training calendar upload
 - **RunKeeper Integration**: Activity import/export
 - **Garmin Connect**: Training plan synchronization  
@@ -176,7 +177,7 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 ## 🎮 How to Use
 
 
-### 1. **Launch & Setup**
+### 1. Launch & Setup
 
 - Run the application and fill in your personal information
 - Set your preferred start date and session times
@@ -184,14 +185,14 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 - Save your preferences for future use
 
 
-### 2. **Generate Your Plan**
+### 2. Generate Your Plan
 
 - Click "Generate C25K Plan" to create your personalized schedule
 - Review the generated plan in the preview area
 - The plan automatically adjusts based on your profile
 
 
-### 3. **Export Your Plan**
+### 3. Export Your Plan
 
 - Choose from implemented export formats:
   - **📱 Calendar**: Import into your phone or computer calendar (ICS format)
@@ -203,11 +204,12 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
   - **Now Available**: Direct exports to Strava, RunKeeper, Garmin Connect, Apple Health, Intervals.icu, PDF, QR Codes, and more!
 
 
-### 4. **Track Progress**
+### 4. Track Progress
 
 - Use the Excel tracker for detailed progress monitoring
 - Check off completed workouts in your calendar
 - Review analytics and adjust as needed
+
 
 ## 📊 Export Formats Explained
 
@@ -225,6 +227,7 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 | **🎯 Intervals.icu** | Structured training | Power/pace zones, advanced workout structure | 🔧 Ready to Deploy |
 | **🌤️ Weather Integration** | Smart recommendations | Live weather-based workout suggestions | 🔧 Ready to Deploy |
 | **🌍 Multi-language** | Global accessibility | Spanish, French, German, Portuguese support | 🔧 Ready to Deploy |
+
 
 ## 🎯 Sample Training Plan
 
@@ -246,10 +249,11 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 - Run 30 minutes (5K distance)
 - Graduation day! 🎉
 
+
 ## ⚙️ Advanced Features
 
 
-### 🔧 **Customization Options**
+### 🔧 Customization Options
 
 - **Rest Day Patterns**: Choose which days work best for you
 - **Session Duration**: Adjust based on your schedule  
@@ -259,14 +263,14 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 **Note**: Weather suggestions are currently simulated for demonstration purposes. Future versions will integrate with live weather APIs.
 
 
-### 📊 **Analytics & Tracking** *(Implemented)*
+### 📊 Analytics & Tracking _(Implemented)_
 
 - **Excel Progress Tracker**: Comprehensive tracking with visual indicators
 - **Calendar Integration**: Visual workout schedule with color coding
 - **Plan Customization**: Adaptive plans based on personal profile
 
 
-### 📊 **Planned Analytics Features** *(Coming Soon)*
+### 📊 Planned Analytics Features _(Coming Soon)_
 
 - **Progress Charts**: Visual representation of improvement over time
 - **Completion Rates**: Track consistency and adherence metrics
@@ -274,7 +278,7 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 - **Goal Achievement**: Monitor progress toward 5K goals
 
 
-### ♿ **Accessibility Features** *(Implemented)*
+### ♿ Accessibility Features _(Implemented)_
 
 - **High Contrast Mode**: Enhanced visibility for low vision users
 - **Large Font Support**: Adjustable text sizes
@@ -282,6 +286,7 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 - **Screen Reader Compatible**: Enhanced descriptions for assistive technology
 - **Keyboard Navigation**: Complete mouse-free operation with focus highlights
 - **Increased Spacing**: Better readability with adjustable spacing
+
 
 ## 🛠️ Development
 
@@ -353,9 +358,11 @@ python -m black .
 python -m isort .
 ```
 
+
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
 
 ## 🙏 Acknowledgments
 
@@ -372,6 +379,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **PyQt6**: Modern cross-platform GUI framework
 - **Python Community**: Excellent ecosystem and libraries
 - **Open Source Contributors**: Thank you for inspiration and tools
+
 
 ## 📞 Support
 
@@ -409,6 +417,11 @@ A: Absolutely! Export to popular fitness apps or use the calendar integration wi
 
 ---
 
-**🏃‍♀️ Ready to start your fitness journey? Download C25K Calendar Creator today! 🏃‍♂️**  
-_Made with ❤️ for the running community_  
-[⬆️ Back to Top](#%F0%9F%8F%83%E2%99%80%EF%B8%8F-c25k-calendar-creator)
+
+---
+
+#### 🏃‍♀️ Ready to start your fitness journey? Download C25K Calendar Creator today! 🏃‍♂️
+
+_Made with ❤️ for the running community_
+
+[⬆️ Back to Top](#-about-this-project)

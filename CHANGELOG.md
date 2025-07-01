@@ -1,3 +1,24 @@
+# [2.1.0] - 2025-07-01
+
+### Maintenance & Community Release
+
+#### Added
+- "About This Project" section in README to clarify personal origins and encourage contributions.
+- README and documentation improvements for clarity and lint compliance.
+- Confirmed all unnecessary files and legacy scripts have been removed from the repository.
+- Ensured all workflows (.github/workflows/ci.yml) and ignore files (.gitignore) are up to date and reflect the current project structure and best practices.
+
+#### Changed
+- Updated project structure and documentation to use "C25K-Calendar-Creator" consistently.
+- README badges and formatting now use pure Markdown for full compatibility.
+- Minor improvements to onboarding and contribution guidance.
+
+#### Fixed
+- Addressed Markdown lint warnings in README.
+- Verified .gitignore covers all build, test, and platform-specific artifacts.
+- Confirmed CI workflow installs dependencies and runs tests as expected.
+
+---
 
 # 📜 Changelog
 
