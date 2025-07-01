@@ -171,6 +171,19 @@ start_day = datetime(2025, 7, 15)
 - **Requires:** `qrcode[pil]` Python package (`pip install qrcode[pil]`).
 - **Privacy:** No data is sent to any server; all files are generated locally. If anonymization is enabled, your name/email will not appear in the export.
 
+## New in this Version
+
+- **Onboarding:** On first launch, a welcome dialog explains the workflow and accessibility options.
+- **Help Menu:** The GUI now includes a Help menu with About and Screenshots options.
+- **Feedback:** A "Send Feedback" button lets you submit suggestions or issues directly from the GUI. Feedback is saved locally for privacy.
+- **Export Success Dialogs:** After each export, a dialog confirms success and shows a clickable path to the output file.
+- **Calendar Widget Polish:**
+  - The calendar highlights only actual workout days, skipping rest days.
+  - Milestone days (end of each week) are color-coded gold.
+  - Tooltips are shown for each workout/milestone day.
+  - Click any highlighted day to see session details in a popup.
+- **Screenshots:** Use the Help menu to view screenshots of the GUI. (Add your own screenshots to the `screenshots/` folder.)
+
 ## Using Templates (Save & Load Your Info)
 
 You can save your user information and plan as a template for easy reuse:

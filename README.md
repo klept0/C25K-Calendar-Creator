@@ -1,6 +1,22 @@
 # Random_Scripts
 
+[![Accessibility](https://img.shields.io/badge/accessibility-AA-blue)](./C25K%20Calendar%20Creator/c25k_ics_generator_readme.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/yourusername/yourrepo/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/yourrepo/actions)
+
 Random Things I Have Made - random ideas that may not be 100%
+
+---
+
+**License:** MIT. See [LICENSE](LICENSE).
+
+**Changelog:** See [CHANGELOG.md](CHANGELOG.md).
+
+**Contributing:** See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Code Style:**
+- This project uses [black](https://black.readthedocs.io/) and [isort](https://pycqa.github.io/isort/) for formatting. Run `black .` and `isort .` before submitting a pull request.
+- All functions should have type hints and docstrings.
 
 ## Contents
 
@@ -29,7 +45,7 @@ Random Things I Have Made - random ideas that may not be 100%
 - **Output Directory Logic:** All exports are saved in a user-specific folder inside the project.
 - **Export Formats:** ICS, CSV, JSON, Google Fit CSV, Markdown, PDF, Excel, Apple Health CSV, Voice Prompts.
 - **Markdown Checklist Export:** Always generated with user info and notes.
-- **Colorized CLI Prompts and Feedback:** For a more user-friendly experience.
+- **Colorized Feedback in GUI:** For a more user-friendly experience, the GUI provides colorized feedback and status messages.
 - **Weather Suggestions:** Real, actionable weather suggestions for your first workout are now provided using live forecast data. Enter your city or ZIP at the prompt to get advice (e.g., "Great weather for running!", "Rain expected, consider rescheduling or wear a rain jacket").
 - **QR Code Export:** Instantly generate a QR code image containing a detailed summary of your C25K plan (all workouts/tips, not just a short string). The QR code is large and high-contrast if accessibility options are enabled, and a Markdown file is generated with the QR code and full plan summary for easy sharing and accessibility. Requires the `qrcode` Python package (`pip install qrcode[pil]`).
 - **PDF Export:** Visually rich, accessible PDF export is now fully supported. The PDF includes a cover page, full plan table, accessibility options, motivational quotes, resource links, and privacy note. Requires the `reportlab` Python package (`pip install reportlab`).
@@ -131,8 +147,10 @@ See the tool README for more details and troubleshooting tips.
 
 ## Quick Start (GUI Only)
 
+- **Install dependencies:**
+  - Run `pip install -r requirements.txt` to install all required packages (PyQt6, openpyxl, requests, qrcode[pil], reportlab).
 - **Launch the PyQt6 GUI:**
-  - Run `python c25k_ics_generator.py` (no CLI or Tkinter prompts; only the GUI is used).
+  - Run `python c25k_ics_generator.py` to launch the GUI.
   - All plan creation, export, and accessibility features are available via the GUI.
   - The GUI is accessible, user-friendly, and supports all export types (ICS, CSV, JSON, Google Fit, Markdown, Strava/Runkeeper, Apple Health, PDF, QR, and Excel tracker).
 
@@ -144,8 +162,25 @@ See the tool README for more details and troubleshooting tips.
   - All accessibility features (high-contrast, large font, dyslexia font, light mode, screen reader, increased spacing, focus highlight) are grouped in a dedicated Accessibility flyout in the GUI.
   - Accessibility options apply to all exports and the GUI itself.
 
-- **Legacy CLI/Tkinter:**
-  - All legacy CLI and Tkinter code has been removed. Only the PyQt6 GUI is supported.
+- **Onboarding & Help:**
+  - On first launch, a welcome dialog explains the workflow and accessibility options.
+  - A Help menu provides access to About and Screenshots.
+
+- **Feedback:**
+  - Use the "Send Feedback" button in the GUI to submit suggestions or issues. Feedback is saved locally for privacy.
+
+- **Export Success Dialogs:**
+  - After each export, a dialog confirms success and shows a clickable path to the output file.
+
+- **Calendar Widget:**
+  - The right side of the GUI features a visual calendar that highlights only actual workout days, skipping rest days.
+  - Milestone days (end of each week) are color-coded gold, and tooltips are shown for each workout/milestone day.
+  - Click any highlighted day to see session details in a popup.
+
+- **Screenshots:**
+  - Use the Help menu to view screenshots of the GUI. (Add your own screenshots to the `screenshots/` folder.)
+
+
 
 - **Advanced Features:**
   - All export types, analytics, and accessibility features are available from the GUI.
@@ -153,11 +188,43 @@ See the tool README for more details and troubleshooting tips.
 
 ---
 
+**Platform Support:**
+
+- The GUI is cross-platform and works on Windows, macOS, and Linux. If you encounter issues with PyQt6 installation, see the troubleshooting section below.
+
+---
+
+**Troubleshooting:**
+
+- If you see errors about missing modules, run `pip install -r requirements.txt`.
+- For PyQt6 installation issues on Linux, you may need to install system Qt libraries (see PyQt6 docs).
+- If you have permission issues saving preferences, ensure you have write access to your home directory.
+- For OpenWeatherMap API errors, check your API key and internet connection.
+- For any other issues, see the tool README or open an issue on GitHub.
+
+---
+
 **Accessibility:**
 
-- High-contrast mode (CLI, Markdown, Excel, PDF)
+- High-contrast mode (GUI, Markdown, Excel, PDF)
 - Large font and dyslexia-friendly font options (Comic Sans MS or OpenDyslexic if available)
 - Semantic headings and ARIA roles in Markdown export
 - PDF export includes an explicit accessibility note, semantic headings, and high-contrast/large font/dyslexia-friendly font options
 - Screen reader compatibility: Markdown and Excel exports are optimized for screen readers (avoid merged cells, clear headers, semantic structure). PDF accessibility is improved but may be limited by PDF readers—see the accessibility note in the PDF export for details.
 - All accessibility features are documented in the README and in the Excel tracker’s "Macros & Instructions" sheet.
+
+---
+
+## Screenshots
+
+*Add screenshots or a GIF of the GUI here for visual reference. The GUI now features onboarding, a Help menu, feedback dialog, export success dialogs, and a polished calendar widget with color-coded milestones and tooltips.*
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open an issue or pull request on GitHub. See the tool README for guidelines.
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.

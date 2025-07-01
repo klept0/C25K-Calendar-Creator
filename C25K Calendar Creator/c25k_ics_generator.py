@@ -17,136 +17,36 @@ Medical recommendations and plan structure are based on:
   https://www.cdc.gov/physicalactivity/basics/index.htm
 - American Heart Association:
   https://www.heart.org/en/healthy-living/fitness/fitness-basics
-"""
 
-
-
+# Standard library and third-party imports
 import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-
-# --- Third-party imports ---
 import requests
-import json
-from openpyxl import Workbook
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, List
 
-# --- Modularized imports ---
-from modules.exports import export_csv, export_json, export_google_fit_csv, export_markdown_checklist
-from modules.utils import anonymize_user
 
-# --- C25K utility modules ---
-from c25k_utils import plan_customization, progress, weather, pdf_export
-from c25k_utils.mobile_export import export_to_mobile_app
 
-# --- GUI/CLI imports (for later use) ---
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+#
+# C25K Calendar Creator – Main Entrypoint
+#
+# All logic is now modularized and accessible via the PyQt6 GUI only.
+# Legacy CLI and Tkinter code has been removed for clarity and maintainability.
+#
+# For advanced export, analytics, and accessibility features, see the modules and README.
+#
 
-# --- Optional calendar widget ---
-try:
-    from tkcalendar import DateEntry
-    TKCALENDAR_AVAILABLE = True
-except ImportError:
-    TKCALENDAR_AVAILABLE = False
+#
+# C25K Calendar Creator – Main Entrypoint
+#
+# All logic is now modularized and accessible via the PyQt6 GUI only.
+# Legacy CLI and Tkinter code has been removed for clarity and maintainability.
+#
+# For advanced export, analytics, and accessibility features, see the modules and README.
+#
 
-# --- Language dictionary for i18n (English/Spanish) ---
-LANG_DICT = {
-    "e": {
-        "title": "C25K Calendar Creator",
-        "name": "Name:",
-        "age": "Age:",
-        "weight": "Weight:",
-        "gender": "Gender:",
-        "units": "Units:",
-        "session_time": "Session Time (HH:MM):",
-        "language": "Language:",
-        "export_format": "Export Format:",
-        "goal": "Personal Goal:",
-        "weeks": "Weeks:",
-        "days_per_week": "Days/Week:",
-        "start_date": "Start Date:",
-        "start_date_entry": "Start Date (YYYY-MM-DD):",
-        "high_contrast": "High-contrast mode",
-        "large_font": "Large font",
-        "dyslexia_font": "Dyslexia-friendly font",
-        "email": "Email (for reminders):",
-        "location": "Location (for weather):",
-        "alert_minutes": "Alert before session (min):",
-        "rest_days": "Rest Days (comma-separated):",
-        "anonymize": "Anonymize data",
-        "create_plan": "Create Plan",
-        "confirm_title": "Confirm Plan",
-        "confirm_msg": "Please confirm your details:",
-        "success_title": "Success",
-        "success_msg": "Your plan and exports have been created!",
-        "input_error": "Input Error",
-        "help_name": "Enter your full name.",
-        "help_age": "Enter your age in years.",
-        "help_weight": "Enter your weight (lbs or kg).",
-        "help_gender": "Select your gender.",
-        "help_units": "Choose Imperial (lbs) or Metric (kg).",
-        "help_time": "Enter the time you prefer to start sessions (24h format).",
-        "help_language": "Choose your preferred language.",
-        "help_export": "Choose the export format for your plan.",
-        "help_goal": "Enter a personal goal (optional).",
-        "help_weeks": "Number of weeks for the plan.",
-        "help_days": "Number of days per week.",
-        "help_start_date": "Pick your plan start date.",
-        "help_start_date_entry": "Enter your plan start date (YYYY-MM-DD).",
-        "help_email": "Enter your email to receive reminders (optional).",
-        "help_location": "Enter your city or ZIP for weather suggestions (optional).",
-        "help_alert": "Minutes before session to receive an alert.",
-        "help_rest": "Enter your preferred rest days (e.g. Sat,Sun).",
-    },
-    "s": {
-        "title": "Creador de Calendario C25K",
-        "name": "Nombre:",
-        "age": "Edad:",
-        "weight": "Peso:",
-        "gender": "Género:",
-        "units": "Unidades:",
-        "session_time": "Hora de sesión (HH:MM):",
-        "language": "Idioma:",
-        "export_format": "Formato de exportación:",
-        "goal": "Meta personal:",
-        "weeks": "Semanas:",
-        "days_per_week": "Días/Semana:",
-        "start_date": "Fecha de inicio:",
-        "start_date_entry": "Fecha de inicio (AAAA-MM-DD):",
-        "high_contrast": "Modo alto contraste",
-        "large_font": "Fuente grande",
-        "dyslexia_font": "Fuente para dislexia",
-        "email": "Correo electrónico (para recordatorios):",
-        "location": "Ubicación (para clima):",
-        "alert_minutes": "Alerta antes de sesión (min):",
-        "rest_days": "Días de descanso (separados por coma):",
-        "anonymize": "Anonimizar datos",
-        "create_plan": "Crear plan",
-        "confirm_title": "Confirmar plan",
-        "confirm_msg": "Por favor confirme sus datos:",
-        "success_title": "¡Éxito!",
-        "success_msg": "¡Su plan y exportaciones han sido creados!",
-        "input_error": "Error de entrada",
-        "help_name": "Ingrese su nombre completo.",
-        "help_age": "Ingrese su edad en años.",
-        "help_weight": "Ingrese su peso (lbs o kg).",
-        "help_gender": "Seleccione su género.",
-        "help_units": "Elija Imperial (lbs) o Métrico (kg).",
-        "help_time": "Ingrese la hora en que prefiere iniciar las sesiones (formato 24h).",
-        "help_language": "Elija su idioma preferido.",
-        "help_export": "Elija el formato de exportación para su plan.",
-        "help_goal": "Ingrese una meta personal (opcional).",
-        "help_weeks": "Número de semanas del plan.",
-        "help_days": "Número de días por semana.",
-        "help_start_date": "Elija la fecha de inicio del plan.",
-        "help_start_date_entry": "Ingrese la fecha de inicio del plan (AAAA-MM-DD).",
-        "help_email": "Ingrese su correo para recibir recordatorios (opcional).",
-        "help_location": "Ingrese su ciudad o código postal para sugerencias de clima (opcional).",
-        "help_alert": "Minutos antes de la sesión para recibir alerta.",
-        "help_rest": "Ingrese sus días de descanso preferidos (ej. Sab,Dom).",
-    },
-}
+if __name__ == "__main__":
+    from modules.pyqt_gui import run_pyqt_gui
+    run_pyqt_gui()
 #
 # 1. Streak Counter (formula for Google Sheets/Excel):
 #    Add a column 'Current_Streak'. In row 2 (first data row):
@@ -197,6 +97,8 @@ LANG_DICT = {
 # All formulas/macros are beginner-friendly and can be copy-pasted into the spreadsheet. See README for more details.
 
 
+from typing import Optional, Dict, Any, List
+
 def colorize(text, color, bold=False):
     colors = {
         "cyan": "\033[96m",
@@ -217,50 +119,9 @@ def colorize(text, color, bold=False):
 
 def get_user_info() -> Optional[Dict[str, Any]]:
     """
-    Prompt user for name, age, weight (imperial by default), gender,
-    session time, language, personal goal, and advanced options.
-    Returns a dict or None if incomplete.
+    Deprecated. CLI code removed. All user interaction is now via the PyQt6 GUI.
     """
-    try:
-        name = input(colorize("Enter your name: ", "green", bold=True)).strip()
-        if not name:
-            print(colorize("Name is required.", "red", bold=True))
-            return None
-        # Default to imperial units
-        unit = input(
-            colorize(
-                "Choose units: [I]mperial (lbs, default) or [M]etric (kg)? ",
-                "blue",
-                bold=True,
-            )
-        ).strip().lower()
-        if unit == "" or unit == "i":
-            unit = "i"
-        elif unit == "m":
-            unit = "m"
-        else:
-            print(
-                colorize(
-                    "Please enter 'I' for Imperial or 'M' for Metric.",
-                    "red",
-                    bold=True,
-                )
-            )
-            return None
-        age = int(
-            input(
-                colorize(
-                    "Enter your age (years): ",
-                    "yellow",
-                    bold=True,
-                )
-            ).strip()
-        )
-        if unit == "m":
-            weight = float(
-                input(
-                    colorize("Enter your weight (kg): ", "magenta", bold=True)
-                ).strip()
+    return None
             )
         else:
             weight = float(
@@ -1779,20 +1640,7 @@ def main() -> None:
     print("\nWe'd love your feedback to help improve this tool!")
     feedback = input("Do you have any comments, suggestions, or issues? (Press Enter to skip): ").strip()
     if feedback:
-        # Save feedback to a local file in the output directory
         feedback_path = os.path.join(outdir, "user_feedback.txt")
         with open(feedback_path, "a", encoding="utf-8") as f:
             from datetime import datetime
             f.write(f"Feedback on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}:\n{feedback}\n\n")
-"""
-C25K Calendar Creator – Main Entrypoint
-
-All logic is now modularized and accessible via the PyQt6 GUI only.
-Legacy CLI and Tkinter code has been removed for clarity and maintainability.
-
-For advanced export, analytics, and accessibility features, see the modules and README.
-"""
-
-if __name__ == "__main__":
-    from modules.pyqt_gui import run_pyqt_gui
-    run_pyqt_gui()
