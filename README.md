@@ -27,22 +27,26 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Flexible Scheduling**: Choose your start date, session times, and rest days
 - **Progressive Structure**: Follows NHS Couch to 5K guidelines
 
-### 📅 **Multiple Export Formats**
+### 📅 **Export Formats** *(Implemented)*
 - **📱 Calendar Integration**: `.ics` files for Apple Calendar, Google Calendar, and Outlook
 - **📊 Excel Tracker**: Advanced progress tracking with macros and visual indicators
-- **📄 Multiple Formats**: CSV, JSON, Markdown checklists, and more
-- **🔗 Mobile Apps**: Export to Strava, RunKeeper, Garmin Connect, and Apple Health
+- **📄 Multiple Formats**: CSV, JSON, Markdown checklists
+- **🔗 Google Fit**: CSV export compatible with Google Fit
+
+### 📅 **Planned Export Features** *(Coming Soon)*
+- **🏃 Mobile Apps**: Direct export to Strava, RunKeeper, Garmin Connect, Apple Health
+- **📊 QR Code Export**: Generate QR codes for easy plan sharing
 
 ### 🎨 **Modern GUI Experience**
 - **Intuitive Interface**: Clean, user-friendly PyQt6 design
-- **Accessibility First**: High contrast mode, large fonts, screen reader support
+- **Accessibility Features**: High contrast mode, large fonts, dyslexia-friendly fonts, screen reader support
 - **Persistent Preferences**: Your settings are automatically saved and restored
-- **Real-time Preview**: See your plan before exporting
+- **Real-time Calendar Preview**: See your workout schedule with color-coded days
 
-### 🌍 **Internationalization**
-- **Multi-language Support**: English and Spanish interfaces
-- **Localized Content**: Workout instructions and tips in your preferred language
-- **Regional Settings**: Imperial/Metric units, date formats
+### 🌍 **Internationalization** *(Planned)*
+- **Multi-language Support**: English interface (Spanish support planned)
+- **Localized Content**: Workout instructions in multiple languages (planned)
+- **Regional Settings**: Imperial/Metric units supported
 
 ### 🏥 **Health & Safety**
 - **Medical Guidelines**: Based on NHS, CDC, and American Heart Association recommendations
@@ -77,15 +81,36 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 - **Memory**: 256MB RAM minimum
 - **Storage**: 50MB free space
 
+## 🎯 Current Status
+
+### ✅ **Fully Implemented Features**
+- **Complete PyQt6 GUI** with modern interface
+- **Core C25K Plan Generation** following NHS guidelines  
+- **Multiple Export Formats**: ICS, CSV, JSON, Markdown, Excel tracker
+- **Accessibility Features**: High contrast, large fonts, screen reader support
+- **Persistent Preferences** with automatic save/restore
+- **Interactive Calendar Preview** with color-coded workout days
+- **Comprehensive Testing** with unit test coverage
+
+### 🔄 **Planned Features** 
+- **Direct Mobile App Integration**: Strava, RunKeeper, Garmin Connect APIs
+- **Real Weather API Integration**: Live weather suggestions
+- **Multi-language Support**: Spanish and other language interfaces
+- **QR Code Export**: Plan sharing via QR codes  
+- **Advanced Analytics Dashboard**: Progress charts and metrics
+- **PDF Export**: Printable workout guides
+
 ## 📋 Dependencies
 
 ```
 PyQt6>=6.0.0          # Modern GUI framework
-requests>=2.0.0        # Weather API integration  
-qrcode[pil]>=7.0.0     # QR code generation
-reportlab>=4.0.0       # PDF export functionality
 openpyxl>=3.1.0        # Excel file creation and macros
+requests>=2.0.0        # Weather API integration (planned feature)
+qrcode[pil]>=7.0.0     # QR code generation (planned feature)
+reportlab>=4.0.0       # PDF export functionality (planned feature)
 ```
+
+**Note**: Some dependencies support planned features that are not yet implemented.
 
 ## 🎮 How to Use
 
@@ -101,11 +126,13 @@ openpyxl>=3.1.0        # Excel file creation and macros
 - The plan automatically adjusts based on your profile
 
 ### 3. **Export Your Plan**
-- Choose from multiple export formats:
-  - **📱 Calendar**: Import into your phone or computer calendar
+- Choose from implemented export formats:
+  - **📱 Calendar**: Import into your phone or computer calendar (ICS format)
   - **📊 Excel**: Track progress with advanced analytics
   - **📄 Checklist**: Print-friendly Markdown format
-  - **🔗 Apps**: Export to fitness platforms
+  - **📈 CSV**: Import into Google Sheets, Numbers, Excel, or Google Fit
+  - **🔗 JSON**: Structured data for app integration
+- **Coming Soon**: Direct exports to Strava, RunKeeper, Garmin Connect, Apple Health
 
 ### 4. **Track Progress**
 - Use the Excel tracker for detailed progress monitoring
@@ -114,14 +141,16 @@ openpyxl>=3.1.0        # Excel file creation and macros
 
 ## 📊 Export Formats Explained
 
-| Format | Use Case | Features |
-|--------|----------|----------|
-| **📱 ICS (Calendar)** | Phone/Computer calendars | Custom alerts, recurring events, timezone support |
-| **📊 Excel Tracker** | Progress monitoring | Macros, charts, analytics, visual progress indicators |
-| **📄 Markdown** | Print/Share | Clean checklist format, goal tracking |
-| **📈 CSV** | Spreadsheet apps | Import into Google Sheets, Numbers, Excel |
-| **🔗 JSON** | App integration | Structured data for other fitness apps |
-| **🏃 Fitness Apps** | Strava, RunKeeper, etc. | Direct export to popular running platforms |
+| Format | Use Case | Features | Status |
+|--------|----------|----------|---------|
+| **📱 ICS (Calendar)** | Phone/Computer calendars | Custom alerts, recurring events, timezone support | ✅ Implemented |
+| **📊 Excel Tracker** | Progress monitoring | Macros, charts, analytics, visual progress indicators | ✅ Implemented |
+| **📄 Markdown** | Print/Share | Clean checklist format, goal tracking | ✅ Implemented |
+| **📈 CSV** | Spreadsheet apps | Import into Google Sheets, Numbers, Excel | ✅ Implemented |
+| **🔗 JSON** | App integration | Structured data for other fitness apps | ✅ Implemented |
+| **🏃 Google Fit** | Fitness tracking | CSV format compatible with Google Fit | ✅ Implemented |
+| **📱 Strava/RunKeeper** | Popular running apps | Direct export to running platforms | 🔄 Planned |
+| **📊 QR Codes** | Easy sharing | QR codes containing plan summary | 🔄 Planned |
 
 ## 🎯 Sample Training Plan
 
@@ -141,21 +170,30 @@ openpyxl>=3.1.0        # Excel file creation and macros
 
 ### 🔧 **Customization Options**
 - **Rest Day Patterns**: Choose which days work best for you
-- **Session Duration**: Adjust based on your schedule
+- **Session Duration**: Adjust based on your schedule  
 - **Difficulty Scaling**: Automatic adjustments for age/weight
-- **Weather Integration**: Get weather-based workout suggestions
+- **Weather Integration**: Demo weather suggestions *(Real API integration planned)*
 
-### 📊 **Analytics & Tracking**
-- **Progress Charts**: Visual representation of your improvement
-- **Completion Rates**: Track consistency and adherence
+**Note**: Weather suggestions are currently simulated for demonstration purposes. Future versions will integrate with live weather APIs.
+
+### 📊 **Analytics & Tracking** *(Implemented)*
+- **Excel Progress Tracker**: Comprehensive tracking with visual indicators
+- **Calendar Integration**: Visual workout schedule with color coding
+- **Plan Customization**: Adaptive plans based on personal profile
+
+### 📊 **Planned Analytics Features** *(Coming Soon)*
+- **Progress Charts**: Visual representation of improvement over time
+- **Completion Rates**: Track consistency and adherence metrics
 - **Performance Metrics**: Time, distance, and effort tracking
-- **Goal Achievement**: Monitor progress toward your 5K goal
+- **Goal Achievement**: Monitor progress toward 5K goals
 
-### ♿ **Accessibility Features**
+### ♿ **Accessibility Features** *(Implemented)*
 - **High Contrast Mode**: Enhanced visibility for low vision users
 - **Large Font Support**: Adjustable text sizes
-- **Screen Reader Compatible**: Full ARIA support
-- **Keyboard Navigation**: Complete mouse-free operation
+- **Dyslexia-Friendly Fonts**: Comic Sans MS option for dyslexic users
+- **Screen Reader Compatible**: Enhanced descriptions for assistive technology
+- **Keyboard Navigation**: Complete mouse-free operation with focus highlights
+- **Increased Spacing**: Better readability with adjustable spacing
 
 ## 🛠️ Development
 
