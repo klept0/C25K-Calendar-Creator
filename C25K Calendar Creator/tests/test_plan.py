@@ -1,19 +1,22 @@
-
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import c25k_ics_generator as c25k
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from datetime import datetime
+
+from modules.core import get_workout_plan
 
 
 # --- Helpers ---
 def _has_rest_day(plan, day):
     return any(s["workout"] == "Rest Day" and s["day"] == day for s in plan)
 
+
 def _no_workouts_on_rest_days(plan, rest_days):
     for s in plan:
         if s["duration"] > 0 and isinstance(s["day"], str):
             assert s["day"] not in rest_days, f"Workout scheduled on rest day: {s['day']}"
+
 
 def _all_workouts_have_fields(plan):
     for s in plan:
@@ -22,9 +25,11 @@ def _all_workouts_have_fields(plan):
                 assert field in s
             assert s["duration"] > 0
 
+
 def _plan_sorted(plan):
     weeks_and_offsets = [(s["week"], s["day_offset"]) for s in plan]
     assert weeks_and_offsets == sorted(weeks_and_offsets)
+
 
 def test_get_workout_plan_basic():
     # Basic plan with rest days
@@ -52,7 +57,7 @@ def test_get_workout_plan_basic():
         "rest_days": ["Sat", "Sun"],
         "anonymize": False,
     }
-    plan = c25k.get_workout_plan(user)
+    plan = get_workout_plan(user)
     assert isinstance(plan, list)
     assert len(plan) > 0
     assert all("week" in s for s in plan)
@@ -63,7 +68,9 @@ def test_get_workout_plan_basic():
     assert rest_entries, "No rest days found in plan"
     for entry in rest_entries:
         assert entry["workout"] == "Rest Day"
-        assert any(day in entry["day"] for day in rest_days), f"Rest day label mismatch: {entry['day']}"
+        assert any(
+            day in entry["day"] for day in rest_days
+        ), f"Rest day label mismatch: {entry['day']}"
     _no_workouts_on_rest_days(plan, rest_days)
     _all_workouts_have_fields(plan)
     _plan_sorted(plan)
@@ -96,17 +103,17 @@ def test_get_workout_plan_varied_rest_days():
     # Only Sunday as rest day
     user1 = dict(base_user)
     user1["rest_days"] = ["Sun"]
-    plan1 = c25k.get_workout_plan(user1)
+    plan1 = get_workout_plan(user1)
     assert any(s["workout"] == "Rest Day" and s["day"] == "Sun" for s in plan1)
     # No rest days
     user2 = dict(base_user)
     user2["rest_days"] = []
-    plan2 = c25k.get_workout_plan(user2)
+    plan2 = get_workout_plan(user2)
     assert not any(s["workout"] == "Rest Day" for s in plan2)
     # All days as rest days
     user3 = dict(base_user)
     user3["rest_days"] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    plan3 = c25k.get_workout_plan(user3)
+    plan3 = get_workout_plan(user3)
     for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
         assert any(s["workout"] == "Rest Day" and s["day"] == day for s in plan3)
 
@@ -137,7 +144,7 @@ def test_get_workout_plan_edge_cases():
         "rest_days": ["Sun"],
         "anonymize": False,
     }
-    plan = c25k.get_workout_plan(user)
+    plan = get_workout_plan(user)
     # Should have 1 workout and 1 rest day
     assert sum(1 for s in plan if s["duration"] > 0) == 1
     assert sum(1 for s in plan if s["duration"] == 0) == 1

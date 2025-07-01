@@ -1,33 +1,73 @@
-from PyQt6.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QComboBox, QSpinBox, QCheckBox, QPushButton, QVBoxLayout, QHBoxLayout, QMessageBox, QGroupBox, QCalendarWidget, QFrame, QMenuBar, QMenu, QFileDialog, QTextEdit, QDialog, QDialogButtonBox
-)
-from PyQt6.QtGui import QAction
+import json  # used for preferences
+import os
 import sys
 
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCalendarWidget,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
-import os
-import json  # used for preferences
 
 class C25KPyQtGUI(QWidget):
     def eventFilter(self, obj, event):
         from PyQt6.QtCore import QEvent
+
         if self.focus_highlight.isChecked() and event.type() == QEvent.Type.FocusIn:
             obj.setStyleSheet(obj.styleSheet() + "; outline: 2px solid #0078d7;")
         elif self.focus_highlight.isChecked() and event.type() == QEvent.Type.FocusOut:
             # Remove only the outline, keep other styles
             obj.setStyleSheet(obj.styleSheet().replace("; outline: 2px solid #0078d7;", ""))
         return super().eventFilter(obj, event)
+
     def show_onboarding(self):
         steps = [
-            ("Welcome to C25K Calendar Creator!", "This app helps you create a personalized Couch to 5K training plan with reminders, exports, and accessibility features."),
-            ("Personal Information", "Fill in your name, age, gender, weight, and preferred units. These help customize your plan."),
-            ("Plan Settings", "Choose how many weeks, days per week, and your preferred start date and time. Select your export format and (optionally) enter your email for reminders."),
-            ("Accessibility Options", "Enable high contrast, large font, dyslexia font, and other options for a more accessible experience."),
-            ("Calendar Preview", "The calendar on the right shows your workout schedule. Milestones and rest days are color-coded."),
-            ("Export & Feedback", "Click 'Generate Plan and Exports' to create your files. Use the Feedback button to send suggestions or issues.")
+            (
+                "Welcome to C25K Calendar Creator!",
+                "This app helps you create a personalized Couch to 5K training plan with reminders, exports, and accessibility features.",
+            ),
+            (
+                "Personal Information",
+                "Fill in your name, age, gender, weight, and preferred units. These help customize your plan.",
+            ),
+            (
+                "Plan Settings",
+                "Choose how many weeks, days per week, and your preferred start date and time. Select your export format and (optionally) enter your email for reminders.",
+            ),
+            (
+                "Accessibility Options",
+                "Enable high contrast, large font, dyslexia font, and other options for a more accessible experience.",
+            ),
+            (
+                "Calendar Preview",
+                "The calendar on the right shows your workout schedule. Milestones and rest days are color-coded.",
+            ),
+            (
+                "Export & Feedback",
+                "Click 'Generate Plan and Exports' to create your files. Use the Feedback button to send suggestions or issues.",
+            ),
         ]
         for title, msg in steps:
             QMessageBox.information(self, title, msg)
+
     def _set_invalid(self, widget, message=None):
         widget.setStyleSheet("border: 2px solid red;")
         if message:
@@ -40,6 +80,7 @@ class C25KPyQtGUI(QWidget):
 
     def _validate_email(self, email):
         import re
+
         if not email:
             return True
         return re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email) is not None
@@ -66,14 +107,24 @@ class C25KPyQtGUI(QWidget):
         else:
             self._set_valid(self.email_edit, "Enter your email for reminders (optional)")
         return valid
+
     PREFS_FILE = os.path.join(os.path.expanduser("~"), ".c25k_prefs.json")
 
     def __init__(self, submit_callback=None):
         super().__init__()
         self.submit_callback = submit_callback
         self.setWindowTitle("C25K Calendar Creator")
+        # Initialize attributes for OS and json modules
+        self.os = os
+        self.json = json
+        self._calendar_tooltips = {}
+        # Load preferences first
         self.prefs = self.load_preferences()
+        # Initialize units based on preferences
+        self._current_unit = "imperial" if self.prefs.get("unit", "i") == "i" else "metric"
         self.init_ui()
+        # Set initial units after UI is created
+        self.set_units(self._current_unit)
         # Onboarding: show welcome dialog on first launch
         if not self.prefs.get("onboarded", False):
             self.show_onboarding()
@@ -81,164 +132,10 @@ class C25KPyQtGUI(QWidget):
             self.save_preferences(silent=True)
 
     def init_ui(self):
-        # Install event filter for focus highlight
-        for w in [self.name_edit, self.age_spin, self.unit_combo, self.weight_spin, self.gender_combo, self.weeks_spin, self.days_spin, self.start_date, self.time_edit, self.export_combo, self.email_edit, self.location_edit]:
-            w.installEventFilter(self)
-
-        # Screen Reader Mode: set accessible descriptions
-        def update_accessible_descriptions():
-            if self.screen_reader.isChecked():
-                self.name_edit.setAccessibleDescription("Name: Enter your full name. Required.")
-                self.age_spin.setAccessibleDescription("Age: Enter your age in years. Required.")
-                self.unit_combo.setAccessibleDescription("Units: Select Imperial or Metric units.")
-                self.weight_spin.setAccessibleDescription("Weight: Enter your weight in selected units.")
-                self.gender_combo.setAccessibleDescription("Gender: Select your gender.")
-                self.weeks_spin.setAccessibleDescription("Weeks: Number of weeks for your plan.")
-                self.days_spin.setAccessibleDescription("Days per week: Number of workout days per week.")
-                self.start_date.setAccessibleDescription("Start Date: Select the date to begin your plan.")
-                self.time_edit.setAccessibleDescription("Session Time: Enter the time for your workouts.")
-                self.export_combo.setAccessibleDescription("Export Format: Select the file format for export.")
-                self.email_edit.setAccessibleDescription("Email: Enter your email for reminders (optional).")
-                self.location_edit.setAccessibleDescription("Location: Enter your city or ZIP for weather (optional).")
-            else:
-                for w in [self.name_edit, self.age_spin, self.unit_combo, self.weight_spin, self.gender_combo, self.weeks_spin, self.days_spin, self.start_date, self.time_edit, self.export_combo, self.email_edit, self.location_edit]:
-                    w.setAccessibleDescription("")
-        self.screen_reader.stateChanged.connect(lambda _: update_accessible_descriptions())
-        update_accessible_descriptions()
-        # Preview Export Button
-        preview_btn = QPushButton("Preview Export")
-        preview_btn.setToolTip("Preview the export file before saving.")
-        preview_btn.clicked.connect(self.show_export_preview)
-        form_layout.addWidget(preview_btn)
-    def show_export_preview(self):
-        # Gather user input as in submit()
-        from datetime import datetime
-        try:
-            user = {
-                "name": self.name_edit.text(),
-                "age": self.age_spin.value(),
-                "weight": self.weight_spin.value(),
-                "weight_unit": "i" if self.unit_combo.currentIndex() == 0 else "m",
-                "gender": self.gender_combo.currentText(),
-                "unit": "i" if self.unit_combo.currentIndex() == 0 else "m",
-                "weeks": self.weeks_spin.value(),
-                "days_per_week": self.days_spin.value(),
-                "start_day": self.start_date.date().toPyDate() if hasattr(self.start_date.date(), 'toPyDate') else datetime.now().date(),
-                "hour": 7,
-                "minute": 0,
-                "lang": "e",
-                "export": "i",  # Will be mapped below
-                "goal": "",
-                "high_contrast": self.high_contrast.isChecked(),
-                "large_font": self.large_font.isChecked(),
-                "dyslexia_font": self.dyslexia_font.isChecked(),
-                "email": self.email_edit.text(),
-                "location": self.location_edit.text(),
-                "alert_minutes": 30,
-                "rest_days": ["Sat", "Sun"],
-                "anonymize": self.anonymize.isChecked(),
-            }
-            export_map = {
-                0: "i", 1: "c", 2: "j", 3: "g", 4: "m", 5: "s", 6: "a"
-            }
-            user["export"] = export_map.get(self.export_combo.currentIndex(), "i")
-            from C25K_Calendar_Creator import c25k_ics_generator as c25k
-            plan = c25k.get_workout_plan(user)
-            preview_text = ""
-            fmt = user["export"]
-            if fmt == "i":
-                # ICS preview
-                from io import StringIO
-                buf = StringIO()
-                # Use a modified generate_ics to write to buffer
-                ics_content = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Couch to 5K//EN\n"
-                for session in plan[:3]:
-                    event_name = session.get("title", f"C25K Week {session.get('week','?')} Day {session.get('day','?')}")
-                    ics_content += f"BEGIN:VEVENT\nSUMMARY:{event_name}\nDESCRIPTION:{session.get('description','')}\nEND:VEVENT\n"
-                ics_content += "...\nEND:VCALENDAR"
-                preview_text = ics_content
-            elif fmt == "c":
-                # CSV preview
-                import csv
-                from io import StringIO
-                buf = StringIO()
-                writer = csv.DictWriter(buf, fieldnames=plan[0].keys())
-                writer.writeheader()
-                for row in plan[:3]:
-                    writer.writerow(row)
-                preview_text = buf.getvalue() + "..."
-            elif fmt == "j":
-                # JSON preview
-                import json
-                preview_text = json.dumps(plan[:3], indent=2) + "\n..."
-            elif fmt == "m":
-                # Markdown preview
-                lines = ["# C25K Plan Checklist\n"]
-                for session in plan[:3]:
-                    title = session.get('title', '')
-                    date = session.get('date', '')
-                    lines.append(f'- [ ] {date}: {title}')
-                preview_text = "\n".join(lines) + "\n..."
-            else:
-                preview_text = "Preview not available for this format."
-            # Show preview in dialog
-            dlg = QDialog(self)
-            dlg.setWindowTitle("Export Preview")
-            layout = QVBoxLayout(dlg)
-            label = QLabel("Preview of export file (first 3 entries):")
-            layout.addWidget(label)
-            text = QTextEdit()
-            text.setReadOnly(True)
-            text.setPlainText(preview_text)
-            layout.addWidget(text)
-            btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-            btns.accepted.connect(dlg.accept)
-            layout.addWidget(btns)
-            dlg.exec()
-        except Exception as e:
-            QMessageBox.critical(self, "Preview Error", f"Could not generate preview: {e}")
-        # Keyboard shortcuts for major actions (set after widgets are created)
-        # ...existing code...
-        save_btn = QPushButton("Save Preferences")
-        save_btn.setToolTip("Save your current settings as default.")
-        save_btn.clicked.connect(self.save_preferences)
-        form_layout.addWidget(save_btn)
-
-        submit_btn = QPushButton("Generate Plan and Exports")
-        submit_btn.setToolTip("Generate your plan and export files")
-        submit_btn.clicked.connect(self.submit)
-        submit_btn.setShortcut("Alt+E")  # Export/Generate
-        form_layout.addWidget(submit_btn)
-
-        feedback_btn.setShortcut("Alt+F")
-        about_action = None
-        for action in self.menu_bar.actions():
-            if action.menu():
-                for subaction in action.menu().actions():
-                    if subaction.text() == "About":
-                        about_action = subaction
-                        break
-        if about_action:
-            about_action.setShortcut("Alt+H")
-        # Set tab order for logical navigation
-        self.setTabOrder(self.name_edit, self.age_spin)
-        self.setTabOrder(self.age_spin, self.unit_combo)
-        self.setTabOrder(self.unit_combo, self.weight_spin)
-        self.setTabOrder(self.weight_spin, self.gender_combo)
-        self.setTabOrder(self.gender_combo, self.weeks_spin)
-        self.setTabOrder(self.weeks_spin, self.days_spin)
-        self.setTabOrder(self.days_spin, self.start_date)
-        self.setTabOrder(self.start_date, self.time_edit)
-        self.setTabOrder(self.time_edit, self.export_combo)
-        self.setTabOrder(self.export_combo, self.email_edit)
-        self.setTabOrder(self.email_edit, self.location_edit)
-        self.setTabOrder(self.location_edit, self.anonymize)
-        # Real-time validation for required fields
-        self.name_edit.textChanged.connect(lambda: self._validate_fields())
-        self.age_spin.valueChanged.connect(lambda: self._validate_fields())
-        self.email_edit.textChanged.connect(lambda: self._validate_fields())
-        # Menu bar (Help, Screenshots, About)
+        # Menu bar (Help, Screenshots, About, Units)
         self.menu_bar = QMenuBar(self)
+
+        # Help menu
         help_menu = QMenu("Help", self)
         about_action = QAction("About", self)
         about_action.triggered.connect(self.show_help)
@@ -248,16 +145,31 @@ class C25KPyQtGUI(QWidget):
         help_menu.addAction(screenshots_action)
         self.menu_bar.addMenu(help_menu)
 
+        # Units dropdown in menu bar
+        units_menu = QMenu("Units", self)
+        self.imperial_action = QAction("Imperial (lbs, °F)", self, checkable=True)
+        self.metric_action = QAction("Metric (kg, °C)", self, checkable=True)
+        self.imperial_action.triggered.connect(lambda: self.set_units("imperial"))
+        self.metric_action.triggered.connect(lambda: self.set_units("metric"))
+        # Set initial state
+        if self.prefs.get("unit", "i") == "i":
+            self.imperial_action.setChecked(True)
+        else:
+            self.metric_action.setChecked(True)
+        units_menu.addAction(self.imperial_action)
+        units_menu.addAction(self.metric_action)
+        self.menu_bar.addMenu(units_menu)
+
         # Main horizontal layout: form (left), calendar (right)
         main_layout = QHBoxLayout()
         form_layout = QVBoxLayout()
         form_layout.setMenuBar(self.menu_bar)
+
         # Feedback Button
         feedback_btn = QPushButton("Send Feedback")
         feedback_btn.setToolTip("Send feedback or suggestions to the developer.")
         feedback_btn.clicked.connect(self.show_feedback_dialog)
         form_layout.addWidget(feedback_btn)
-
 
         # --- Personal Information Group ---
         personal_group = QGroupBox("Personal Information")
@@ -273,22 +185,12 @@ class C25KPyQtGUI(QWidget):
         self.age_spin.setValue(self.prefs.get("age", 30))
         self.age_spin.setToolTip("Enter your age (5-120)")
         personal_layout.addLayout(self._row("Age", self.age_spin))
-        # Units (must be before weight for logic)
-        self.unit_combo = QComboBox()
-        self.unit_combo.addItems(["Imperial (i)", "Metric (m)"])
-        self.unit_combo.setToolTip("Choose units: Imperial or Metric")
-        self.unit_combo.setCurrentIndex(0 if self.prefs.get("unit", "i") == "i" else 1)
-        self.unit_combo.currentIndexChanged.connect(self.update_weight_unit)
-        personal_layout.addLayout(self._row("Units", self.unit_combo))
-        # Weight
+        # Weight (will be updated by unit combo later)
         self.weight_spin = QSpinBox()
-        self.weight_label = QLabel()
-        self.update_weight_unit()
-        if self.unit_combo.currentIndex() == 0:
-            self.weight_spin.setValue(self.prefs.get("weight", 150))
-        else:
-            self.weight_spin.setValue(self.prefs.get("weight", 70))
-        personal_layout.addLayout(self._row(self.weight_label, self.weight_spin))
+        self.weight_spin.setRange(50, 500)  # Covers both lbs and kg ranges
+        self.weight_spin.setValue(self.prefs.get("weight", 150))
+        self.weight_spin.setToolTip("Enter your weight")
+        personal_layout.addLayout(self._row("Weight (lbs)", self.weight_spin))
         # Gender
         self.gender_combo = QComboBox()
         self.gender_combo.addItems(["male", "female", "other"])
@@ -298,7 +200,6 @@ class C25KPyQtGUI(QWidget):
         personal_layout.addLayout(self._row("Gender", self.gender_combo))
         personal_group.setLayout(personal_layout)
         form_layout.addWidget(personal_group)
-
 
         # --- Plan Settings Group ---
         plan_group = QGroupBox("Plan Settings")
@@ -316,8 +217,9 @@ class C25KPyQtGUI(QWidget):
         self.days_spin.setToolTip("Days per week (default 3)")
         plan_layout.addLayout(self._row("Days/Week", self.days_spin))
         # Start Date
-        from PyQt6.QtWidgets import QDateEdit
         from PyQt6.QtCore import QDate
+        from PyQt6.QtWidgets import QDateEdit
+
         self.start_date = QDateEdit()
         self.start_date.setCalendarPopup(True)
         self.start_date.setDate(QDate.currentDate())
@@ -331,9 +233,17 @@ class C25KPyQtGUI(QWidget):
         plan_layout.addLayout(self._row("Session Time", self.time_edit))
         # Export Format
         self.export_combo = QComboBox()
-        self.export_combo.addItems([
-            "ICS (Calendar)", "CSV", "JSON", "Google Fit CSV", "Markdown", "Strava/Runkeeper", "Apple Health"
-        ])
+        self.export_combo.addItems(
+            [
+                "ICS (Calendar)",
+                "CSV",
+                "JSON",
+                "Google Fit CSV",
+                "Markdown",
+                "Strava/Runkeeper",
+                "Apple Health",
+            ]
+        )
         self.export_combo.setToolTip("Choose export format")
         plan_layout.addLayout(self._row("Export Format", self.export_combo))
         # Email (optional)
@@ -348,7 +258,9 @@ class C25KPyQtGUI(QWidget):
         plan_layout.addLayout(self._row("Location", self.location_edit))
         # Anonymize
         self.anonymize = QCheckBox("Anonymize Exports")
-        self.anonymize.setToolTip("Remove personal info from all exports. If checked, your name and email will not appear in any export file.")
+        self.anonymize.setToolTip(
+            "Remove personal info from all exports. If checked, your name and email will not appear in any export file."
+        )
         self.anonymize.setChecked(self.prefs.get("anonymize", False))
         plan_layout.addWidget(self.anonymize)
         plan_group.setLayout(plan_layout)
@@ -393,23 +305,117 @@ class C25KPyQtGUI(QWidget):
         acc_group.setLayout(acc_layout)
         form_layout.addWidget(acc_group)
 
+        # Preview Export Button
+        preview_btn = QPushButton("Preview Export")
+        preview_btn.setToolTip("Preview the export file before saving.")
+        preview_btn.clicked.connect(self.show_export_preview)
+        form_layout.addWidget(preview_btn)
+
         # Save/Restore Preferences Button
         save_btn = QPushButton("Save Preferences")
         save_btn.setToolTip("Save your current settings as default.")
         save_btn.clicked.connect(self.save_preferences)
         form_layout.addWidget(save_btn)
 
-        # Submit Button
+        # Main submit button
         submit_btn = QPushButton("Generate Plan and Exports")
         submit_btn.setToolTip("Generate your plan and export files")
         submit_btn.clicked.connect(self.submit)
+        submit_btn.setShortcut("Alt+E")  # Export/Generate
         form_layout.addWidget(submit_btn)
 
+        # Now that all widgets are created, set up event filters and configurations
+        # Install event filter for focus highlight
+        for w in [
+            self.name_edit,
+            self.age_spin,
+            self.weight_spin,
+            self.gender_combo,
+            self.weeks_spin,
+            self.days_spin,
+            self.start_date,
+            self.time_edit,
+            self.export_combo,
+            self.email_edit,
+            self.location_edit,
+        ]:
+            w.installEventFilter(self)
+
+        # Screen Reader Mode: set accessible descriptions
+        def update_accessible_descriptions():
+            if self.screen_reader.isChecked():
+                self.name_edit.setAccessibleDescription("Name: Enter your full name. Required.")
+                self.age_spin.setAccessibleDescription("Age: Enter your age in years. Required.")
+                self.weight_spin.setAccessibleDescription(
+                    "Weight: Enter your weight in selected units."
+                )
+                self.gender_combo.setAccessibleDescription("Gender: Select your gender.")
+                self.weeks_spin.setAccessibleDescription("Weeks: Number of weeks for your plan.")
+                self.days_spin.setAccessibleDescription(
+                    "Days per week: Number of workout days per week."
+                )
+                self.start_date.setAccessibleDescription(
+                    "Start Date: Select the date to begin your plan."
+                )
+                self.time_edit.setAccessibleDescription(
+                    "Session Time: Enter the time for your workouts."
+                )
+                self.export_combo.setAccessibleDescription(
+                    "Export Format: Select the file format for export."
+                )
+                self.email_edit.setAccessibleDescription(
+                    "Email: Enter your email for reminders (optional)."
+                )
+                self.location_edit.setAccessibleDescription(
+                    "Location: Enter your city or ZIP for weather (optional)."
+                )
+            else:
+                for w in [
+                    self.name_edit,
+                    self.age_spin,
+                    self.weight_spin,
+                    self.gender_combo,
+                    self.weeks_spin,
+                    self.days_spin,
+                    self.start_date,
+                    self.time_edit,
+                    self.export_combo,
+                    self.email_edit,
+                    self.location_edit,
+                ]:
+                    w.setAccessibleDescription("")
+
+        self.screen_reader.stateChanged.connect(lambda _: update_accessible_descriptions())
+        update_accessible_descriptions()
+
+        # Set keyboard shortcuts
+        feedback_btn.setShortcut("Alt+F")
+        about_action.setShortcut("Alt+H")
+
+        # Set tab order for logical navigation
+        self.setTabOrder(self.name_edit, self.age_spin)
+        self.setTabOrder(self.age_spin, self.weight_spin)
+        self.setTabOrder(self.weight_spin, self.gender_combo)
+        self.setTabOrder(self.gender_combo, self.weeks_spin)
+        self.setTabOrder(self.weeks_spin, self.days_spin)
+        self.setTabOrder(self.days_spin, self.start_date)
+        self.setTabOrder(self.start_date, self.time_edit)
+        self.setTabOrder(self.time_edit, self.export_combo)
+        self.setTabOrder(self.export_combo, self.email_edit)
+        self.setTabOrder(self.email_edit, self.location_edit)
+        self.setTabOrder(self.location_edit, self.anonymize)
+
+        # Real-time validation for required fields
+        self.name_edit.textChanged.connect(lambda: self._validate_fields())
+        self.age_spin.valueChanged.connect(lambda: self._validate_fields())
+        self.email_edit.textChanged.connect(lambda: self._validate_fields())
 
         # --- Calendar Widget ---
         self.calendar = QCalendarWidget()
         self.calendar.setGridVisible(True)
-        self.calendar.setToolTip("Visual calendar: workout days will be highlighted after you choose your plan options.")
+        self.calendar.setToolTip(
+            "Visual calendar: workout days will be highlighted after you choose your plan options."
+        )
         self.calendar.setMinimumWidth(350)
         self.calendar.clicked.connect(self.show_calendar_day_details)
         # Add a frame for visual separation
@@ -454,7 +460,6 @@ class C25KPyQtGUI(QWidget):
         self.weeks_spin.valueChanged.connect(self.update_calendar_highlight)
         self.days_spin.valueChanged.connect(self.update_calendar_highlight)
         self.start_date.dateChanged.connect(self.update_calendar_highlight)
-        self.unit_combo.currentIndexChanged.connect(self.update_calendar_highlight)
         # Initial highlight
         self.update_calendar_highlight()
 
@@ -463,8 +468,9 @@ class C25KPyQtGUI(QWidget):
         Highlight only the actual workout days, skipping user rest days, on the calendar.
         Add color-coding for milestones and tooltips for each workout day.
         """
-        from PyQt6.QtGui import QTextCharFormat, QColor
         from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QColor, QTextCharFormat
+
         # Clear all highlights in a wide range
         fmt_clear = QTextCharFormat()
         cal = self.calendar
@@ -498,24 +504,32 @@ class C25KPyQtGUI(QWidget):
                 # Color-code milestones (last day of week)
                 if (workout_count + 1) % days_per_week == 0:
                     cal.setDateTextFormat(d, milestone_fmt)
-                    self._calendar_tooltips[d.toString(Qt.DateFormat.ISODate)] = "Milestone: End of week!"
+                    self._calendar_tooltips[d.toString(Qt.DateFormat.ISODate)] = (
+                        "Milestone: End of week!"
+                    )
                 else:
                     cal.setDateTextFormat(d, fmt)
-                    self._calendar_tooltips[d.toString(Qt.DateFormat.ISODate)] = f"Workout Day {workout_count + 1}"
+                    self._calendar_tooltips[d.toString(Qt.DateFormat.ISODate)] = (
+                        f"Workout Day {workout_count + 1}"
+                    )
                 workout_count += 1
             else:
                 cal.setDateTextFormat(d, rest_fmt)
                 self._calendar_tooltips[d.toString(Qt.DateFormat.ISODate)] = "Rest Day"
             d = d.addDays(1)
             day_ptr += 1
+
     def show_calendar_day_details(self, qdate):
         # Show a popup with details for the clicked day if it's a workout/milestone
         key = qdate.toString(qdate.Qt.DateFormat.ISODate)
         tip = self._calendar_tooltips.get(key)
         if tip:
             QMessageBox.information(self, "Workout Day Details", tip)
+
     def show_welcome(self):
-        QMessageBox.information(self, "Welcome to C25K Calendar Creator",
+        QMessageBox.information(
+            self,
+            "Welcome to C25K Calendar Creator",
             """
 Welcome! This tool helps you create a personalized Couch to 5K plan with accessibility and export options.
 
@@ -524,7 +538,8 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
 • Use the Accessibility group to adjust the interface.
 • Click 'Generate Plan and Exports' to create your plan.
 • For help, use the Help menu or the README.
-            """)
+            """,
+        )
 
     def show_feedback_dialog(self):
         dialog = QDialog(self)
@@ -534,8 +549,11 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
         layout.addWidget(label)
         textedit = QTextEdit()
         layout.addWidget(textedit)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         layout.addWidget(buttons)
+
         def submit():
             feedback = textedit.toPlainText().strip()
             if feedback:
@@ -543,11 +561,15 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
                     feedback_path = os.path.join(os.path.expanduser("~"), "c25k_feedback.txt")
                     with open(feedback_path, "a", encoding="utf-8") as f:
                         import datetime
+
                         f.write(f"[{datetime.datetime.now().isoformat()}] {feedback}\n\n")
-                    QMessageBox.information(self, "Thank you!", f"Feedback saved to {feedback_path}")
+                    QMessageBox.information(
+                        self, "Thank you!", f"Feedback saved to {feedback_path}"
+                    )
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Could not save feedback: {e}")
             dialog.accept()
+
         buttons.accepted.connect(submit)
         buttons.rejected.connect(dialog.reject)
         dialog.exec()
@@ -559,14 +581,19 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
             os.makedirs(screenshots_dir, exist_ok=True)
         QFileDialog.getOpenFileName(self, "View Screenshot", screenshots_dir)
 
-
     def save_preferences(self, silent=False):
         prefs = {
             "name": self.name_edit.text(),
             "age": self.age_spin.value(),
             "weight": self.weight_spin.value(),
             "gender": self.gender_combo.currentText(),
-            "unit": "i" if self.unit_combo.currentIndex() == 0 else "m",
+            "unit": "i" if self.get_current_unit() == "imperial" else "m",
+            "weeks": self.weeks_spin.value(),
+            "days_per_week": self.days_spin.value(),
+            "time": self.time_edit.text(),
+            "email": self.email_edit.text(),
+            "location": self.location_edit.text(),
+            "anonymize": self.anonymize.isChecked(),
             "high_contrast": self.high_contrast.isChecked(),
             "large_font": self.large_font.isChecked(),
             "dyslexia_font": self.dyslexia_font.isChecked(),
@@ -578,9 +605,13 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
         }
         try:
             with open(self.PREFS_FILE, "w", encoding="utf-8") as f:
-                self.json.dump(prefs, f, indent=2)
+                json.dump(prefs, f, indent=2)
             if not silent:
-                QMessageBox.information(self, "Preferences Saved", "Your preferences have been saved and will be restored next time.")
+                QMessageBox.information(
+                    self,
+                    "Preferences Saved",
+                    "Your preferences have been saved and will be restored next time.",
+                )
         except Exception as e:
             if not silent:
                 QMessageBox.critical(self, "Error", f"Could not save preferences: {e}")
@@ -595,25 +626,62 @@ Welcome! This tool helps you create a personalized Couch to 5K plan with accessi
         return {}
 
     def update_weight_unit(self):
-        # Update label and tooltip for weight based on selected unit
-        if self.unit_combo.currentIndex() == 0:
-            # Imperial
-            self.weight_label.setText("Weight (lbs)")
-            self.weight_spin.setToolTip("Enter your weight in lbs (65-660)")
-            self.weight_spin.setRange(65, 660)
-            if self.weight_spin.value() < 65 or self.weight_spin.value() > 660:
-                self.weight_spin.setValue(150)
+        """Update weight field based on current unit selection."""
+        current_unit = self.get_current_unit()
+        if current_unit == "imperial":
+            self.weight_spin.setRange(50, 500)
+            self.weight_spin.setSuffix(" lbs")
+            self.weight_spin.setToolTip("Enter your weight in pounds")
         else:
-            # Metric
-            self.weight_label.setText("Weight (kg)")
-            self.weight_spin.setToolTip("Enter your weight in kg (30-300)")
-            self.weight_spin.setRange(30, 300)
-            if self.weight_spin.value() < 30 or self.weight_spin.value() > 300:
-                self.weight_spin.setValue(70)
-        self.weight_label.repaint()
+            self.weight_spin.setRange(30, 200)
+            self.weight_spin.setSuffix(" kg")
+            self.weight_spin.setToolTip("Enter your weight in kilograms")
+
+    def set_units(self, unit_type):
+        """Set units to imperial or metric and update UI accordingly."""
+        if unit_type == "imperial":
+            self.imperial_action.setChecked(True)
+            self.metric_action.setChecked(False)
+            # Update weight field for imperial (lbs)
+            current_weight = self.weight_spin.value()
+            if hasattr(self, "_current_unit") and self._current_unit == "metric":
+                # Convert kg to lbs
+                self.weight_spin.setValue(int(current_weight * 2.205))
+            self.weight_spin.setRange(50, 500)
+            self.weight_spin.setSuffix(" lbs")
+            self._current_unit = "imperial"
+        else:  # metric
+            self.imperial_action.setChecked(False)
+            self.metric_action.setChecked(True)
+            # Update weight field for metric (kg)
+            current_weight = self.weight_spin.value()
+            if hasattr(self, "_current_unit") and self._current_unit == "imperial":
+                # Convert lbs to kg
+                self.weight_spin.setValue(int(current_weight / 2.205))
+            self.weight_spin.setRange(30, 200)
+            self.weight_spin.setSuffix(" kg")
+            self._current_unit = "metric"
+
+        # Update weight label in the row layout
+        self.update_weight_labels()
+
+    def update_weight_labels(self):
+        """Update the weight field labels and ranges based on current units."""
+        if hasattr(self, "_current_unit") and self._current_unit == "metric":
+            self.weight_spin.setToolTip("Enter your weight in kilograms")
+        else:
+            self.weight_spin.setToolTip("Enter your weight in pounds")
+
+    def get_current_unit(self):
+        """Get the current unit setting."""
+        if hasattr(self, "_current_unit"):
+            return self._current_unit
+        return "imperial" if self.imperial_action.isChecked() else "metric"
 
     def show_help(self):
-        QMessageBox.information(self, "About C25K Calendar Creator",
+        QMessageBox.information(
+            self,
+            "About C25K Calendar Creator",
             """
 C25K Calendar Creator (PyQt6)
 Create a personalized Couch to 5K training plan and export it in various formats.
@@ -628,7 +696,8 @@ Fields:
 - Anonymize: Remove personal info from exports.
 
 For help, visit the README or contact the author.
-""")
+""",
+        )
 
     def _row(self, label, widget):
         row = QHBoxLayout()
@@ -637,10 +706,13 @@ For help, visit the README or contact the author.
         return row
 
     def submit(self):
-        if hasattr(self, '_validate_fields') and not self._validate_fields():
-            QMessageBox.warning(self, "Invalid Input", "Please correct the highlighted fields before submitting.")
+        if hasattr(self, "_validate_fields") and not self._validate_fields():
+            QMessageBox.warning(
+                self, "Invalid Input", "Please correct the highlighted fields before submitting."
+            )
             return
         import os
+
         try:
             # Validate required fields
             if not self.name_edit.text().strip():
@@ -661,7 +733,7 @@ For help, visit the README or contact the author.
             }
             export_code = export_map.get(self.export_combo.currentIndex(), "i")
             # Map units
-            unit_code = "i" if self.unit_combo.currentIndex() == 0 else "m"
+            unit_code = "i" if self.get_current_unit() == "imperial" else "m"
             user_input = {
                 "name": self.name_edit.text(),
                 "age": self.age_spin.value(),
@@ -694,43 +766,68 @@ For help, visit the README or contact the author.
             except Exception:
                 QMessageBox.critical(self, "Input Error", "Session time must be in HH:MM format.")
                 return
-            # Import main logic from c25k_ics_generator
-            import importlib.util
-            main_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "c25k_ics_generator.py"))
-            spec = importlib.util.spec_from_file_location("c25k_main", main_path)
-            if spec is None or spec.loader is None:
-                QMessageBox.critical(self, "Error", "Could not load main logic (c25k_ics_generator.py not found or import failed).")
-                return
-            c25k_main = importlib.util.module_from_spec(spec)
-            sys.modules["c25k_main"] = c25k_main
-            spec.loader.exec_module(c25k_main)
+
+            # Import core logic functions
+            from modules.core import (
+                generate_apple_health_csv,
+                generate_csv,
+                generate_excel_tracker,
+                generate_ics,
+                generate_json,
+                generate_markdown,
+                generate_strava_csv,
+                get_workout_plan,
+            )
+
             # Generate plan and outputs
-            plan = c25k_main.get_workout_plan(user_input)
-            outdir = c25k_main.get_output_dir(user_input)
+            plan = get_workout_plan(user_input)
+            outdir = os.path.join(os.path.expanduser("~"), "C25K_Exports")
+            os.makedirs(outdir, exist_ok=True)
+
             # Export logic for all types
             if export_code == "i":
-                c25k_main.generate_ics(plan, user_input["start_day"], user_input["hour"], user_input["minute"], user_input["alert_minutes"], outdir)
+                generate_ics(
+                    plan,
+                    user_input["start_day"],
+                    user_input["hour"],
+                    user_input["minute"],
+                    user_input.get("alert_minutes", 30),
+                    outdir,
+                )
             elif export_code == "c":
-                c25k_main.export_csv(plan, os.path.join(outdir, "Couch_to_5K_Plan.csv"))
+                generate_csv(plan, outdir)
             elif export_code == "j":
-                c25k_main.export_json(plan, os.path.join(outdir, "Couch_to_5K_Plan.json"))
+                generate_json(plan, outdir)
             elif export_code == "g":
-                c25k_main.export_google_fit_csv(plan, os.path.join(outdir, "Couch_to_5K_GoogleFit.csv"))
+                # Google Fit CSV - use regular CSV for now
+                generate_csv(plan, outdir)
             elif export_code == "m":
-                c25k_main.export_markdown_checklist(plan, os.path.join(outdir, "Couch_to_5K_Checklist.md"))
+                generate_markdown(plan, user_input, outdir)
             elif export_code == "s":
-                if hasattr(c25k_main, "export_strava_runkeeper_csv"):
-                    c25k_main.export_strava_runkeeper_csv(plan, os.path.join(outdir, "Couch_to_5K_Strava_Runkeeper.csv"))
-                else:
-                    QMessageBox.warning(self, "Export Not Available", "Strava/Runkeeper export is not implemented.")
+                # Strava/Runkeeper export
+                generate_strava_csv(plan, outdir)
+                QMessageBox.information(
+                    self,
+                    "Export Complete",
+                    "Strava CSV export completed! You can import this file into Strava or Runkeeper.",
+                )
             elif export_code == "a":
-                if hasattr(c25k_main, "export_apple_health_csv"):
-                    c25k_main.export_apple_health_csv(plan, os.path.join(outdir, "Couch_to_5K_Apple_Health.csv"))
-                else:
-                    QMessageBox.warning(self, "Export Not Available", "Apple Health export is not implemented.")
-            # Always create progress tracker
-            c25k_main.create_progress_tracker(user_input, outdir)
-            QMessageBox.information(self, "Success", f"Plan and exports generated in: {outdir}")
+                # Apple Health export
+                generate_apple_health_csv(plan, outdir)
+                QMessageBox.information(
+                    self,
+                    "Export Complete",
+                    "Apple Health CSV export completed! Import this file using the Apple Health app or a compatible tool.",
+                )
+
+            # Always create Excel progress tracker
+            generate_excel_tracker(plan, user_input, outdir)
+
+            QMessageBox.information(
+                self,
+                "Success",
+                f"Plan and exports generated in: {outdir}\n\nIncludes:\n- Selected export format\n- Excel progress tracker\n- All necessary files for your C25K journey!",
+            )
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
@@ -738,7 +835,9 @@ For help, visit the README or contact the author.
         # Only import if available (for linting environments)
         QPalette = QColor = None
         try:
-            from PyQt6.QtGui import QPalette as _QPalette, QColor as _QColor
+            from PyQt6.QtGui import QColor as _QColor
+            from PyQt6.QtGui import QPalette as _QPalette
+
             QPalette = _QPalette
             QColor = _QColor
         except ImportError:
@@ -773,6 +872,98 @@ For help, visit the README or contact the author.
         self.increased_spacing.setChecked(False)
         self.focus_highlight.setChecked(False)
         self.apply_palette()
+
+    def show_export_preview(self):
+        """Show a preview of the export file before generating."""
+        from datetime import datetime
+
+        try:
+            user = {
+                "name": self.name_edit.text(),
+                "age": self.age_spin.value(),
+                "weight": self.weight_spin.value(),
+                "weight_unit": "i" if self.get_current_unit() == "imperial" else "m",
+                "gender": self.gender_combo.currentText(),
+                "unit": "i" if self.get_current_unit() == "imperial" else "m",
+                "weeks": self.weeks_spin.value(),
+                "days_per_week": self.days_spin.value(),
+                "start_day": (
+                    self.start_date.date().toPyDate()
+                    if hasattr(self.start_date.date(), "toPyDate")
+                    else datetime.now().date()
+                ),
+                "hour": 7,
+                "minute": 0,
+                "lang": "e",
+                "export": "i",  # Will be mapped below
+                "goal": "",
+                "high_contrast": self.high_contrast.isChecked(),
+                "large_font": self.large_font.isChecked(),
+                "dyslexia_font": self.dyslexia_font.isChecked(),
+                "email": self.email_edit.text(),
+                "location": self.location_edit.text(),
+                "alert_minutes": 30,
+                "rest_days": ["Sat", "Sun"],
+                "anonymize": self.anonymize.isChecked(),
+            }
+            export_map = {0: "i", 1: "c", 2: "j", 3: "g", 4: "m", 5: "s", 6: "a"}
+            user["export"] = export_map.get(self.export_combo.currentIndex(), "i")
+            from modules.core import get_workout_plan
+
+            plan = get_workout_plan(user)
+            preview_text = ""
+            fmt = user["export"]
+            if fmt == "i":
+                # ICS preview
+                ics_content = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Couch to 5K//EN\n"
+                for session in plan[:3]:
+                    event_name = f"C25K Week {session.get('week','?')} Day {session.get('day','?')}"
+                    ics_content += f"BEGIN:VEVENT\nSUMMARY:{event_name}\nDESCRIPTION:{session.get('description','')}\nEND:VEVENT\n"
+                ics_content += "...\nEND:VCALENDAR"
+                preview_text = ics_content
+            elif fmt == "c":
+                # CSV preview
+                import csv
+                from io import StringIO
+
+                buf = StringIO()
+                writer = csv.DictWriter(buf, fieldnames=list(plan[0].keys()) if plan else [])
+                writer.writeheader()
+                for row in plan[:3]:
+                    writer.writerow(row)
+                preview_text = buf.getvalue() + "..."
+            elif fmt == "j":
+                # JSON preview
+                import json
+
+                preview_text = json.dumps(plan[:3], indent=2) + "\n..."
+            elif fmt == "m":
+                # Markdown preview
+                lines = ["# C25K Plan Checklist\n"]
+                for session in plan[:3]:
+                    date = session.get("date", "")
+                    workout = session.get("workout", "")
+                    lines.append(f"- [ ] {date}: {workout}")
+                preview_text = "\n".join(lines) + "\n..."
+            else:
+                preview_text = "Preview not available for this format."
+            # Show preview in dialog
+            dlg = QDialog(self)
+            dlg.setWindowTitle("Export Preview")
+            layout = QVBoxLayout(dlg)
+            label = QLabel("Preview of export file (first 3 entries):")
+            layout.addWidget(label)
+            text = QTextEdit()
+            text.setReadOnly(True)
+            text.setPlainText(preview_text)
+            layout.addWidget(text)
+            btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+            btns.accepted.connect(dlg.accept)
+            layout.addWidget(btns)
+            dlg.exec()
+        except Exception as e:
+            QMessageBox.critical(self, "Preview Error", f"Could not generate preview: {e}")
+
 
 def run_pyqt_gui(submit_callback=None):
     app = QApplication(sys.argv)
