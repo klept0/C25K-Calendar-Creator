@@ -1,9 +1,11 @@
-# Changelog
 
-All notable changes to the C25K Calendar Creator project will be documented in this file.
+# 📜 Changelog
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to the **C25K Calendar Creator** project are documented in this file.
+
+This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
 
 ## [2.0.0] - 2025-06-30
 

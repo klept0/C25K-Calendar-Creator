@@ -132,7 +132,8 @@ class C25KPyQtGUI(QWidget):
             self.save_preferences(silent=True)
 
     def init_ui(self):
-        # Menu bar (Help, Screenshots, About, Units)
+
+        # Menu bar (Help, Screenshots, About, Units, Integrations)
         self.menu_bar = QMenuBar(self)
 
         # Help menu
@@ -159,6 +160,43 @@ class C25KPyQtGUI(QWidget):
         units_menu.addAction(self.imperial_action)
         units_menu.addAction(self.metric_action)
         self.menu_bar.addMenu(units_menu)
+
+        # Integrations menu
+        integrations_menu = QMenu("Integrations", self)
+        manage_integrations_action = QAction("Enable/Disable Integrations...", self)
+        manage_integrations_action.triggered.connect(self.show_integrations_dialog)
+        integrations_menu.addAction(manage_integrations_action)
+        self.menu_bar.addMenu(integrations_menu)
+
+    def show_integrations_dialog(self):
+        """Show a dialog to enable/disable integrations (Strava, RunKeeper, Garmin, Intervals.icu, Weather)."""
+        integrations = [
+            ("Strava", "strava_enabled"),
+            ("RunKeeper", "runkeeper_enabled"),
+            ("Garmin Connect", "garmin_enabled"),
+            ("Intervals.icu", "intervals_enabled"),
+            ("Weather Integration", "weather_enabled"),
+        ]
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Manage Integrations")
+        layout = QVBoxLayout(dialog)
+        label = QLabel("Enable or disable integrations. Changes are saved automatically.")
+        layout.addWidget(label)
+        checkboxes = {}
+        for name, key in integrations:
+            cb = QCheckBox(name)
+            cb.setChecked(self.prefs.get(key, True))
+            layout.addWidget(cb)
+            checkboxes[key] = cb
+        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        btns.accepted.connect(dialog.accept)
+        layout.addWidget(btns)
+        def save_integrations():
+            for key, cb in checkboxes.items():
+                self.prefs[key] = cb.isChecked()
+            self.save_preferences(silent=True)
+        dialog.accepted.connect(save_integrations)
+        dialog.exec()
 
         # Main horizontal layout: form (left), calendar (right)
         main_layout = QHBoxLayout()

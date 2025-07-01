@@ -1,21 +1,22 @@
+# ℹ️ About This Project
+
+This project began as a personal tool to help manage my own Couch to 5K journey. After finding it useful, I decided to share it with the community in hopes that others might benefit as well. Contributions, pull requests, and suggestions for enhancements are very welcome!
+
+Feel free to open issues, submit pull requests, or suggest new features—let's make C25K Calendar Creator even better together.
+
 
 # 🏃‍♀️ C25K Calendar Creator
 
-<div align="center">
+
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python&logoColor=white)
 ![PyQt6](https://img.shields.io/badge/PyQt6-GUI-green?style=for-the-badge&logo=qt&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 
+**A modern, accessible Couch to 5K training plan generator with a beautiful PyQt6 GUI**
 
-<strong>A modern, accessible Couch to 5K training plan generator with a beautiful PyQt6 GUI</strong>
-
-<em>Turn your fitness goals into reality with personalized workout calendars and comprehensive tracking tools</em>
-
-
-
-</div>
+_Turn your fitness goals into reality with personalized workout calendars and comprehensive tracking tools_
 
 ## 🌟 Overview
 
@@ -80,8 +81,9 @@ The **C25K Calendar Creator** is a comprehensive desktop application that genera
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/Random-Scripts.git
-cd Random-Scripts
+
+git clone https://github.com/yourusername/C25K-Calendar-Creator.git
+cd C25K-Calendar-Creator
 
 1. **Clone the repository**
 
@@ -287,7 +289,7 @@ reportlab>=4.0.0      # PDF export functionality (planned feature)
 ### Project Structure
 
 ```text
-Random-Scripts/
+C25K-Calendar-Creator/
 ├── c25k_ics_generator.py          # Main application entry point
 ├── modules/                       # Core application modules
 │   ├── core.py                   # Business logic and plan generation
@@ -401,8 +403,12 @@ A: Absolutely! Export to popular fitness apps or use the calendar integration wi
 
 ---
 
-<p align="center">
-  <strong>🏃‍♀️ Ready to start your fitness journey? Download C25K Calendar Creator today! 🏃‍♂️</strong><br>
-  <em>Made with ❤️ for the running community</em><br>
-  <a href="#%F0%9F%8F%83%E2%99%80%EF%B8%8F-c25k-calendar-creator">⬆️ Back to Top</a>
-</p>
+
+---
+
+
+---
+
+**🏃‍♀️ Ready to start your fitness journey? Download C25K Calendar Creator today! 🏃‍♂️**  
+_Made with ❤️ for the running community_  
+[⬆️ Back to Top](#%F0%9F%8F%83%E2%99%80%EF%B8%8F-c25k-calendar-creator)

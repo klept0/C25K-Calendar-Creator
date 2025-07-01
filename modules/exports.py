@@ -92,10 +92,33 @@ class ExportManager:
             print("Advanced features not available. Install: pip install qrcode[pil] reportlab requests")
     
     def export_plan(self, plan_data: Dict[str, Any], export_format: str, filename: str, **kwargs) -> bool:
-        """Export plan in the specified format"""
+        """Export plan in the specified format, respecting integration preferences."""
         try:
             sessions = plan_data.get('sessions', [])
-            
+
+            # Helper to check integration preferences
+            def integration_enabled(service: str) -> bool:
+                import os, json
+                prefs_path = os.path.join(os.path.expanduser("~"), ".c25k_prefs.json")
+                if not os.path.exists(prefs_path):
+                    return True
+                try:
+                    with open(prefs_path, "r", encoding="utf-8") as f:
+                        prefs = json.load(f)
+                    key_map = {
+                        "strava": "strava_enabled",
+                        "runkeeper": "runkeeper_enabled",
+                        "garmin": "garmin_enabled",
+                        "intervals.icu": "intervals_enabled",
+                        "weather": "weather_enabled",
+                    }
+                    pref_key = key_map.get(service.lower())
+                    if pref_key is not None:
+                        return prefs.get(pref_key, True)
+                except Exception:
+                    return True
+                return True
+
             if export_format.lower() == 'csv':
                 export_csv(sessions, filename)
                 return True
@@ -114,12 +137,20 @@ class ExportManager:
                 results = self.advanced_exporter.export_with_qr_codes(plan_data, filename.replace('.png', ''))
                 return any(results.values())
             elif export_format.lower() in ['strava', 'runkeeper', 'garmin', 'intervals.icu'] and self.advanced_available:
+                if not integration_enabled(export_format.lower()):
+                    print(f"Integration for {export_format} is disabled in preferences.")
+                    return False
                 from .api_integrations import convert_c25k_plan_to_workouts
                 workouts = convert_c25k_plan_to_workouts(plan_data)
                 return self.api_manager.export_to_platform(export_format.lower(), workouts)
+            elif export_format.lower() == 'weather' and self.advanced_available:
+                if not integration_enabled('weather'):
+                    print("Weather integration is disabled in preferences.")
+                    return False
+                # Weather export logic would go here
+                return True
             else:
                 return False
-                
         except Exception as e:
             print(f"Export failed: {e}")
             return False

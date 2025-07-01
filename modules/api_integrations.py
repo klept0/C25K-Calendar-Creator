@@ -416,12 +416,34 @@ class APIManager:
             logging.error(f"Failed to setup weather client: {e}")
             return False
     
+
     def export_to_platform(self, service: str, workouts: List[WorkoutData]) -> bool:
-        """Export training plan to a specific platform"""
+        """Export training plan to a specific platform, respecting user integration preferences."""
+        # Check user preferences for enabled integrations
+        prefs_path = os.path.join(os.path.expanduser("~"), ".c25k_prefs.json")
+        enabled = True
+        try:
+            if os.path.exists(prefs_path):
+                with open(prefs_path, "r", encoding="utf-8") as f:
+                    prefs = json.load(f)
+                key_map = {
+                    "strava": "strava_enabled",
+                    "runkeeper": "runkeeper_enabled",
+                    "garmin": "garmin_enabled",
+                    "intervals.icu": "intervals_enabled",
+                }
+                pref_key = key_map.get(service.lower())
+                if pref_key is not None:
+                    enabled = prefs.get(pref_key, True)
+        except Exception as e:
+            logging.error(f"Failed to check integration preferences: {e}")
+            enabled = True  # Default to enabled if error
+        if not enabled:
+            logging.info(f"Integration for {service} is disabled in user preferences.")
+            return False
         if service not in self.clients:
             logging.error(f"Client for {service} not configured")
             return False
-        
         return self.clients[service].upload_training_plan(workouts)
     
     def get_weather_recommendation(self, lat: float, lon: float) -> str:
